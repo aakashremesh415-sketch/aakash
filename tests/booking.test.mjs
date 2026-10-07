@@ -6,12 +6,30 @@ process.env.SMTP_HOST = "127.0.0.1";
 process.env.MAIL_FROM = "Aakash Remesh <hello@aakashremesh.com>";
 process.env.OWNER_EMAIL = "owner@example.com";
 process.env.MEETING_URL = "https://meet.example.com/aakash";
+process.env.MS_TENANT_ID = "tenant-123";
+process.env.MS_CLIENT_ID = "client-abc";
+process.env.MS_CLIENT_SECRET = "secret";
+process.env.MS_ORGANIZER = "aakash@example.onmicrosoft.com";
 
 const { BOOKING } = await import("../api/_lib/config.js");
 const { generateSlots, isOfferedSlot } = await import("../api/_lib/slots.js");
 const { buildIcs } = await import("../api/_lib/ics.js");
 const store = await import("../api/_lib/store.js");
 const mail = await import("../api/_lib/mail.js");
+const teams = await import("../api/_lib/teams.js");
+
+// Fake Microsoft Graph: token endpoint + events endpoint.
+let graph = { calls: [], fail: false, n: 0 };
+const fakeFetch = async (url, init = {}) => {
+  graph.calls.push({ url: String(url), method: init.method || "GET", body: init.body });
+  const reply = (status, obj) => new Response(JSON.stringify(obj), { status, headers: { "content-type": "application/json" } });
+  if (String(url).includes("login.microsoftonline.com")) return reply(200, { access_token: "tok", expires_in: 3600 });
+  if (init.method === "DELETE") return new Response(null, { status: 204 });
+  if (graph.fail) return reply(503, { error: { code: "ServiceUnavailable" } });
+  graph.n += 1;
+  return reply(201, { id: `evt-${graph.n}`, onlineMeeting: { joinUrl: `https://teams.microsoft.com/l/meetup-join/meeting-${graph.n}` } });
+};
+teams.useFetch(fakeFetch);
 const slotsFn = (await import("../api/slots.js")).GET;
 const bookFn = (await import("../api/book.js")).POST;
 const messageFn = (await import("../api/message.js")).POST;
@@ -27,7 +45,7 @@ before(() => {
     },
   });
 });
-const reset = () => { sent = []; failOwner = false; store.useStore(store.memoryStore()); };
+const reset = () => { sent = []; failOwner = false; graph = { calls: [], fail: false, n: 0 }; teams.useFetch(fakeFetch); store.useStore(store.memoryStore()); };
 
 let ipN = 0;
 const req = (path, body, { origin = "https://aakashremesh.com", method = "POST" } = {}) =>
@@ -236,4 +254,47 @@ test("without mail settings the endpoints say they're unavailable", async () => 
   assert.equal(res.status, 503);
   MAIL.owner = keep;
   process.env.OWNER_EMAIL = saved;
+});
+
+// ---- Teams meetings -------------------------------------------------------------
+
+test("each booking gets its own Teams link in both emails and the invite", async () => {
+  reset();
+  const { slots } = await (await slotsFn(new Request("https://aakashremesh.com/api/slots"))).json();
+  await bookFn(req("/api/book", { ...human, fullName: "A", email: "a@a.com", company: "A", start: slots[0], timeZone: "UTC" }));
+  await bookFn(req("/api/book", { ...human, fullName: "B", email: "b@b.com", company: "B", start: slots[4], timeZone: "UTC" }));
+  const links = sent.map((m) => (m.text.match(/https:\/\/teams\.microsoft\.com\S+/) || [])[0]);
+  assert.deepEqual(links, [
+    "https://teams.microsoft.com/l/meetup-join/meeting-1", "https://teams.microsoft.com/l/meetup-join/meeting-1",
+    "https://teams.microsoft.com/l/meetup-join/meeting-2", "https://teams.microsoft.com/l/meetup-join/meeting-2",
+  ]);
+  assert.match(sent[1].icalEvent.content, /URL:https:\/\/teams\.microsoft\.com\/l\/meetup-join\/meeting-1/);
+  assert.match(sent[1].html, /Join the Teams Meeting/);
+  const create = graph.calls.find((c) => c.method === "POST" && c.url.includes("/events"));
+  const body = JSON.parse(create.body);
+  assert.equal(body.isOnlineMeeting, true);
+  assert.equal(body.onlineMeetingProvider, "teamsForBusiness");
+  assert.equal(body.attendees, undefined, "no Outlook invite should be sent by Graph");
+  assert.ok(create.url.includes(encodeURIComponent("aakash@example.onmicrosoft.com")));
+  // The access token is fetched once and reused.
+  assert.equal(graph.calls.filter((c) => c.url.includes("login.microsoftonline.com")).length, 1);
+});
+
+test("if Teams is down the booking still succeeds with the fallback link", async () => {
+  reset();
+  graph.fail = true;
+  const start = await firstSlot();
+  const res = await bookFn(req("/api/book", { ...human, fullName: "A", email: "a@a.com", company: "A", start, timeZone: "UTC" }));
+  assert.equal(res.status, 200);
+  assert.match(sent[1].text, /Join: https:\/\/meet\.example\.com\/aakash/);
+  assert.doesNotMatch(sent[1].html, /Teams Meeting/);
+});
+
+test("a rolled-back booking also deletes its Teams meeting", async () => {
+  reset();
+  failOwner = true;
+  const start = await firstSlot();
+  const res = await bookFn(req("/api/book", { ...human, fullName: "A", email: "a@a.com", company: "A", start, timeZone: "UTC" }));
+  assert.equal(res.status, 502);
+  assert.ok(graph.calls.some((c) => c.method === "DELETE" && c.url.endsWith("/events/evt-1")));
 });

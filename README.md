@@ -71,7 +71,7 @@ into `public/`, which Vercel serves; `src/`, `tools/`, `tests/` and `brand/` are
    | `SMTP_PASS` | *mailbox password* | The Titan mailbox password; store it only in Vercel |
    | `MAIL_FROM` | `Aakash Remesh <hello@aakashremesh.com>` | Must be the same Titan address as `SMTP_USER` |
    | `OWNER_EMAIL` | `you@example.com` | Where bookings and messages arrive. Never sent to browsers |
-   | `MEETING_URL` | `https://meet.google.com/abc-defg-hij` | Fixed video link for every call (optional) |
+   | `MEETING_URL` | `https://meet.google.com/abc-defg-hij` | Fixed video link, used when Teams isn't set up (optional) |
 
    Optional booking settings (defaults in brackets):
    `BOOKING_TZ` [`Asia/Kolkata`], `BOOKING_WINDOWS` [`10:00-13:00,18:30-22:00`],
@@ -87,6 +87,51 @@ into `public/`, which Vercel serves; `src/`, `tools/`, `tests/` and `brand/` are
 With Gmail, use `smtp.gmail.com`, port 465, and a Google **app password** (needs 2-Step
 Verification). A mailbox on your own domain (Zoho Mail, Google Workspace) delivers more
 reliably and looks more professional.
+
+### Teams meeting links (optional)
+
+With a **Microsoft 365 business account** that includes Teams, every booking gets its own
+Teams meeting: the site creates it in your Outlook calendar (no attendees, so Outlook sends
+nothing) and puts the unique join link in both emails and the calendar invite. Free/personal
+Teams accounts can't do this. Without these settings, bookings use `MEETING_URL`.
+
+1. [entra.microsoft.com](https://entra.microsoft.com) → **App registrations → New registration**.
+   Name `aakashremesh.com booking`, single tenant, no redirect URI.
+2. **API permissions → Add → Microsoft Graph → Application permissions → `Calendars.ReadWrite`**,
+   then **Grant admin consent**.
+3. **Certificates & secrets → New client secret** (24 months). Copy the secret *value* now.
+4. Recommended: limit the app to your own mailbox with an Exchange
+   [application access policy](https://learn.microsoft.com/graph/auth-limit-mailbox-access)
+   (`New-ApplicationAccessPolicy -AccessRight RestrictAccess …`), so it can't touch other calendars.
+5. Add to Vercel environment variables, then redeploy:
+
+   | Variable | Value |
+   |---|---|
+   | `MS_TENANT_ID` | Directory (tenant) ID from the app's Overview page |
+   | `MS_CLIENT_ID` | Application (client) ID |
+   | `MS_CLIENT_SECRET` | The secret value from step 3 |
+   | `MS_ORGANIZER` | The Microsoft 365 user who hosts the calls, e.g. `aakash@yourcompany.com` |
+
+If Teams can't be reached when someone books, the booking still goes through with
+`MEETING_URL`, and the error appears in Vercel's function logs. Renew the client secret
+before it expires.
+
+### Email deliverability (Titan: SPF, DKIM, DMARC)
+
+Add these DNS records wherever `aakashremesh.com`'s DNS is hosted: **Vercel → Domains**
+if you pointed the nameservers to Vercel, otherwise **GoDaddy → My Products → DNS**.
+
+| Type | Name | Value |
+|---|---|---|
+| MX | `@` | `mx1.titan.email` (priority 10) |
+| MX | `@` | `mx2.titan.email` (priority 20) |
+| TXT | `@` | `v=spf1 include:spf.titan.email ~all` |
+| TXT | *selector from Titan*, e.g. `titan1._domainkey` | *DKIM key from Titan* (`v=DKIM1; k=rsa; p=…`) |
+| TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:hello@aakashremesh.com; fo=1` |
+
+Only one SPF record is allowed; if one exists, add `include:spf.titan.email` to it.
+Copy the DKIM name and value exactly from Titan's admin panel. After two to four weeks of
+clean DMARC reports, tighten DMARC to `p=quarantine`, then `p=reject`.
 
 ### How booking works
 

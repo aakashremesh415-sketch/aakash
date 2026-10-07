@@ -4,6 +4,7 @@ import { BOOKING, mailConfigured } from "./_lib/config.js";
 import { isOfferedSlot, slotEnd } from "./_lib/slots.js";
 import { busyBetween, release, reserve, upcomingCountForEmail } from "./_lib/store.js";
 import { sendBookingConfirmation, sendBookingToOwner } from "./_lib/mail.js";
+import { createTeamsMeeting, deleteTeamsMeeting, teamsConfigured } from "./_lib/teams.js";
 import { EMAIL_RE, clean, cleanText, clientIp, json, limited, looksLikeBot, readJson, sameOrigin, validTz } from "./_lib/http.js";
 
 async function handler(req) {
@@ -48,12 +49,26 @@ async function handler(req) {
       return json(409, { ok: false, error: "Someone just took that slot. Please pick another time." });
     }
 
+    // A unique Teams meeting for this call, when Microsoft 365 is connected.
+    // If Teams can't be reached the booking still goes ahead with MEETING_URL (or "link to follow").
+    let eventId = null;
+    if (teamsConfigured()) {
+      try {
+        const meeting = await createTeamsMeeting(booking);
+        booking.meetingUrl = meeting.joinUrl;
+        eventId = meeting.eventId;
+      } catch (err) {
+        console.error("[book] Teams meeting creation failed; using the fallback link", err);
+      }
+    }
+
     // If Aakash can't be told, the booking would be lost, so undo it and say so.
     try {
       await sendBookingToOwner(booking);
     } catch (err) {
       console.error("[book] owner email failed", err);
       await release(booking).catch(() => {});
+      await deleteTeamsMeeting(eventId).catch(() => {});
       return json(502, { ok: false, error: "Your booking couldn't be completed. Please try again, or send a message instead." });
     }
     try {

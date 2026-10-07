@@ -31,6 +31,8 @@ const fromAddress = () => {
   return m ? { name: m[1].replace(/^"|"$/g, "") || MAIL.ownerName, address: m[2] } : { name: MAIL.ownerName, address: MAIL.from };
 };
 const owner = () => ({ name: MAIL.ownerName, address: MAIL.owner });
+/** The join link for this booking: its own Teams meeting if one was created, else MEETING_URL. */
+const joinUrl = (b) => b.meetingUrl || BOOKING.meetingUrl || "";
 
 const when = (date, tz) =>
   new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" }).format(date);
@@ -58,11 +60,11 @@ export function bookingIcs(b) {
     summary: `${BOOKING.title}: ${b.company}`,
     description:
       `${BOOKING.durationMin}-minute call with Aakash Remesh.\n` +
-      (BOOKING.meetingUrl ? `Join: ${BOOKING.meetingUrl}\n` : "A video link will follow by email.\n") +
+      (joinUrl(b) ? `Join: ${joinUrl(b)}\n` : "A video link will follow by email.\n") +
       `Booked by ${b.fullName} (${b.email}), ${b.company}.` +
       (b.notes ? `\nNotes: ${b.notes}` : ""),
-    location: BOOKING.meetingUrl || "Video call",
-    url: BOOKING.meetingUrl || undefined,
+    location: b.meetingUrl ? "Microsoft Teams meeting" : (BOOKING.meetingUrl || "Video call"),
+    url: joinUrl(b) || undefined,
     organizer: { name: MAIL.ownerName, email: fromAddress().address },
     attendees: [{ name: b.fullName, email: b.email }, { name: MAIL.ownerName, email: MAIL.owner }],
   });
@@ -77,13 +79,14 @@ export async function sendBookingToOwner(b) {
     row("Name", b.fullName), row("Email", b.email), row("Company", b.company),
   ];
   if (b.notes) rows.push(row("Notes", b.notes));
+  if (joinUrl(b)) rows.push(row(b.meetingUrl ? "Teams link" : "Video link", joinUrl(b)));
   const t = await transport();
   return t.sendMail({
     from: fromAddress(),
     to: owner(),
     replyTo: { name: b.fullName, address: b.email },
     subject: `New booking: ${b.fullName} (${b.company}), ${when(start, BOOKING.hostTimeZone)}`,
-    text: `New ${BOOKING.durationMin}-minute call booked.\n\nWhen (IST): ${when(start, BOOKING.hostTimeZone)}\nTheir time: ${when(start, b.clientTz)}\nName: ${b.fullName}\nEmail: ${b.email}\nCompany: ${b.company}\n${b.notes ? `Notes: ${b.notes}\n` : ""}\nReply to this email to reach them.`,
+    text: `New ${BOOKING.durationMin}-minute call booked.\n\nWhen (IST): ${when(start, BOOKING.hostTimeZone)}\nTheir time: ${when(start, b.clientTz)}\nName: ${b.fullName}\nEmail: ${b.email}\nCompany: ${b.company}\n${b.notes ? `Notes: ${b.notes}\n` : ""}${joinUrl(b) ? `Join: ${joinUrl(b)}\n` : ""}\nReply to this email to reach them.`,
     html: layout("New Booking", table(rows) + `<p style="margin:16px 0 0">Reply to this email to reach ${escapeHtml(b.fullName)}.</p>`),
     icalEvent: { method: "REQUEST", filename: "invite.ics", content: bookingIcs(b) },
   });
@@ -92,8 +95,8 @@ export async function sendBookingToOwner(b) {
 /** Confirmation + calendar invite to the visitor. */
 export async function sendBookingConfirmation(b) {
   const start = new Date(b.start);
-  const link = BOOKING.meetingUrl
-    ? `<p style="margin:16px 0"><a href="${escapeHtml(BOOKING.meetingUrl)}" style="display:inline-block;background:#15121f;color:#fbfaff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">Join the Video Call</a></p>`
+  const link = joinUrl(b)
+    ? `<p style="margin:16px 0"><a href="${escapeHtml(joinUrl(b))}" style="display:inline-block;background:#15121f;color:#fbfaff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">${b.meetingUrl ? "Join the Teams Meeting" : "Join the Video Call"}</a></p>`
     : `<p style="margin:16px 0">I'll send the video link before the call.</p>`;
   const t = await transport();
   return t.sendMail({
@@ -101,7 +104,7 @@ export async function sendBookingConfirmation(b) {
     to: { name: b.fullName, address: b.email },
     replyTo: owner(),
     subject: `Confirmed: ${BOOKING.durationMin}-minute call with Aakash Remesh, ${when(start, b.clientTz)}`,
-    text: `Hi ${b.fullName},\n\nThanks for booking a ${BOOKING.durationMin}-minute call.\n\nWhen: ${when(start, b.clientTz)}\n${BOOKING.meetingUrl ? `Join: ${BOOKING.meetingUrl}\n` : "I'll send the video link before the call.\n"}\nThe calendar invite is attached. Need a different time? Just reply to this email.\n\nAakash Remesh\nhttps://aakashremesh.com`,
+    text: `Hi ${b.fullName},\n\nThanks for booking a ${BOOKING.durationMin}-minute call.\n\nWhen: ${when(start, b.clientTz)}\n${joinUrl(b) ? `Join: ${joinUrl(b)}\n` : "I'll send the video link before the call.\n"}\nThe calendar invite is attached. Need a different time? Just reply to this email.\n\nAakash Remesh\nhttps://aakashremesh.com`,
     html: layout("Your Call Is Booked", `<p style="margin:0 0 12px">Hi ${escapeHtml(b.fullName)}, thanks for booking a ${BOOKING.durationMin}-minute call.</p>` +
       table([row("When", when(start, b.clientTz)), row("With", "Aakash Remesh")]) + link +
       `<p style="margin:0">The calendar invite is attached. Need a different time? Just reply to this email.</p>`),
