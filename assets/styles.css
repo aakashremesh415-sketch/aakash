@@ -205,3 +205,6 @@ p { margin: 0 0 1rem; }
 .reveal { opacity: 0; transform: translateY(16px); transition: opacity .6s ease, transform .6s ease; }
 .reveal.is-visible { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+.footer__links { display: flex; flex-wrap: wrap; gap: 1.2rem; }
+.footer__links a { text-decoration: none; font-weight: 600; }
+.footer__links a:hover { color: var(--accent); }
