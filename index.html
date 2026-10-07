@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Aakash Remesh — Bookkeeping &amp; Accounting Systems Consultant</title>
   <meta name="description" content="Aakash Remesh sets up, cleans up and migrates accounting systems — QuickBooks Online, Sage Intacct, NetSuite, Zoho Books and Xero — for eCommerce, SaaS, manufacturing and multi-entity businesses. 8+ years, clients across the US, India, New Zealand and Europe.">
   <link rel="canonical" href="https://aakashremesh.com/">
@@ -19,9 +21,7 @@
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <meta name="theme-color" content="#d9ccff">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preload" href="/assets/fonts/manrope-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/styles.css">
   <link rel="preload" as="image" href="/assets/img/aakash-center.webp">
 
@@ -34,7 +34,6 @@
     "url": "https://aakashremesh.com/",
     "image": "https://aakashremesh.com/assets/img/og.jpg",
     "logo": "https://aakashremesh.com/assets/brand/seal.png",
-    "email": "mailto:aakashremesh415@gmail.com",
     "address": { "@type": "PostalAddress", "addressRegion": "Kerala", "addressCountry": "IN" },
     "worksFor": { "@type": "Organization", "name": "Renocrew Solutions", "url": "https://www.renocrewsolutions.com" },
     "alumniOf": [
@@ -71,7 +70,6 @@
   </header>
 
   <main id="main">
-    <!-- Hero -->
     <section class="hero">
       <div class="wrap hero__inner">
         <div class="hero__copy">
@@ -84,7 +82,7 @@
           </p>
           <div class="hero__cta">
             <a class="btn" href="#contact">Start a Conversation</a>
-            <a class="btn btn--ghost" href="https://www.upwork.com/freelancers/~01dfe8e2fc663ed9ec" target="_blank" rel="noopener me">Hire Me on Upwork ↗</a>
+            <a class="btn btn--ghost" href="https://www.upwork.com/freelancers/~01dfe8e2fc663ed9ec" target="_blank" rel="noopener noreferrer me">Hire Me on Upwork ↗</a>
           </div>
           <dl class="stats">
             <div><dt>8+</dt><dd>Years in Finance Operations</dd></div>
@@ -142,7 +140,6 @@
       </div>
     </section>
 
-    <!-- About -->
     <section class="section" id="about">
       <div class="wrap grid-2">
         <div>
@@ -158,7 +155,7 @@
           </p>
           <p>
             I'm a Client Ops Specialist at
-            <a href="https://www.renocrewsolutions.com" target="_blank" rel="noopener">Renocrew Solutions</a>.
+            <a href="https://www.renocrewsolutions.com" target="_blank" rel="noopener noreferrer">Renocrew Solutions</a>.
             I own month-end close and day-to-day relationships for a portfolio of clients and support
             their ERP implementations. Every engagement ends with written SOPs, so your team can run the
             process after I'm done.
@@ -168,7 +165,6 @@
       </div>
     </section>
 
-    <!-- Services -->
     <section class="section section--tint" id="services">
       <div class="wrap">
         <p class="eyebrow">What I Do</p>
@@ -208,7 +204,6 @@
       </div>
     </section>
 
-    <!-- Platforms -->
     <section class="section" id="platforms">
       <div class="wrap">
         <p class="eyebrow">Platforms &amp; Tools</p>
@@ -252,7 +247,6 @@
       </div>
     </section>
 
-    <!-- Experience -->
     <section class="section section--tint" id="experience">
       <div class="wrap grid-2">
         <div>
@@ -319,15 +313,14 @@
       <div class="wrap">
         <p class="chips-label mono">Credentials on File</p>
         <ul class="certs">
-          <li><a href="/assets/img/certs/quickbooks-proadvisor.webp" target="_blank" rel="noopener"><img src="/assets/img/certs/quickbooks-proadvisor.webp" width="1000" height="750" loading="lazy" alt="Intuit QuickBooks ProAdvisor Academy certificate of completion issued to Aakash Remesh"><span>QuickBooks ProAdvisor</span></a></li>
-          <li><a href="/assets/img/certs/zoho-books-associate.webp" target="_blank" rel="noopener"><img src="/assets/img/certs/zoho-books-associate.webp" width="1000" height="750" loading="lazy" alt="Zoho certificate of excellence: Certified Zoho Books Associate, Aakash Remesh"><span>Zoho Books Associate</span></a></li>
-          <li><a href="/assets/img/certs/xero-advisor.webp" target="_blank" rel="noopener"><img src="/assets/img/certs/xero-advisor.webp" width="400" height="566" loading="lazy" alt="Xero advisor certified certificate issued to Aakash Remesh"><span>Xero Advisor</span></a></li>
-          <li><a href="/assets/img/certs/microsoft-linkedin-data-analysis.webp" target="_blank" rel="noopener"><img src="/assets/img/certs/microsoft-linkedin-data-analysis.webp" width="937" height="750" loading="lazy" alt="Career Essentials in Data Analysis by Microsoft and LinkedIn, completed by Aakash Remesh"><span>Data Analysis · Microsoft &amp; LinkedIn</span></a></li>
+          <li><a href="/assets/img/certs/quickbooks-proadvisor.webp" target="_blank" rel="noopener noreferrer"><img src="/assets/img/certs/quickbooks-proadvisor.webp" width="1000" height="750" loading="lazy" alt="Intuit QuickBooks ProAdvisor Academy certificate of completion issued to Aakash Remesh"><span>QuickBooks ProAdvisor</span></a></li>
+          <li><a href="/assets/img/certs/zoho-books-associate.webp" target="_blank" rel="noopener noreferrer"><img src="/assets/img/certs/zoho-books-associate.webp" width="1000" height="750" loading="lazy" alt="Zoho certificate of excellence: Certified Zoho Books Associate, Aakash Remesh"><span>Zoho Books Associate</span></a></li>
+          <li><a href="/assets/img/certs/xero-advisor.webp" target="_blank" rel="noopener noreferrer"><img src="/assets/img/certs/xero-advisor.webp" width="400" height="566" loading="lazy" alt="Xero advisor certified certificate issued to Aakash Remesh"><span>Xero Advisor</span></a></li>
+          <li><a href="/assets/img/certs/microsoft-linkedin-data-analysis.webp" target="_blank" rel="noopener noreferrer"><img src="/assets/img/certs/microsoft-linkedin-data-analysis.webp" width="937" height="750" loading="lazy" alt="Career Essentials in Data Analysis by Microsoft and LinkedIn, completed by Aakash Remesh"><span>Data Analysis · Microsoft &amp; LinkedIn</span></a></li>
         </ul>
       </div>
     </section>
 
-    <!-- Beyond the books -->
     <section class="section" id="projects">
       <div class="wrap">
         <p class="eyebrow">Beyond the Books</p>
@@ -359,7 +352,6 @@
       </div>
     </section>
 
-    <!-- Contact -->
     <section class="section contact" id="contact">
       <div class="wrap contact__inner">
         <img class="contact__face" src="/assets/img/aakash-up.webp" width="160" height="160" alt="" loading="lazy">
@@ -368,9 +360,9 @@
           <h2>Let's Talk.</h2>
           <p class="lead">Need your books set up properly, your data migrated cleanly, or years of messy accounting untangled? Tell me what's going on.</p>
           <div class="hero__cta">
-            <a class="btn" href="mailto:aakashremesh415@gmail.com">aakashremesh415@gmail.com</a>
-            <a class="btn btn--ghost" href="https://www.linkedin.com/in/aakashremesh/" target="_blank" rel="noopener me">LinkedIn ↗</a>
-            <a class="btn btn--ghost" href="https://www.upwork.com/freelancers/~01dfe8e2fc663ed9ec" target="_blank" rel="noopener me">Upwork ↗</a>
+            <a class="btn js-email" href="#contact" data-u="aakashremesh415" data-d="gmail.com">aakashremesh415 [at] gmail [dot] com</a>
+            <a class="btn btn--ghost" href="https://www.linkedin.com/in/aakashremesh/" target="_blank" rel="noopener noreferrer me">LinkedIn ↗</a>
+            <a class="btn btn--ghost" href="https://www.upwork.com/freelancers/~01dfe8e2fc663ed9ec" target="_blank" rel="noopener noreferrer me">Upwork ↗</a>
           </div>
           <p class="langs mono">Speaks English · Hindi · Malayalam · Tamil</p>
         </div>
@@ -382,9 +374,9 @@
     <div class="wrap footer__inner">
       <span>&copy; <span id="year">2026</span> Aakash Remesh</span>
       <span class="footer__links">
-        <a href="https://www.linkedin.com/in/aakashremesh/" target="_blank" rel="noopener me">LinkedIn</a>
-        <a href="https://www.upwork.com/freelancers/~01dfe8e2fc663ed9ec" target="_blank" rel="noopener me">Upwork</a>
-        <a href="https://www.renocrewsolutions.com" target="_blank" rel="noopener">Renocrew Solutions</a>
+        <a href="https://www.linkedin.com/in/aakashremesh/" target="_blank" rel="noopener noreferrer me">LinkedIn</a>
+        <a href="https://www.upwork.com/freelancers/~01dfe8e2fc663ed9ec" target="_blank" rel="noopener noreferrer me">Upwork</a>
+        <a href="https://www.renocrewsolutions.com" target="_blank" rel="noopener noreferrer">Renocrew Solutions</a>
       </span>
     </div>
   </footer>

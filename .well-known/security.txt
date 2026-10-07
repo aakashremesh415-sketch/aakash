@@ -1,0 +1,4 @@
+Contact: https://www.linkedin.com/in/aakashremesh/
+Expires: 2027-10-07T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://aakashremesh.com/.well-known/security.txt

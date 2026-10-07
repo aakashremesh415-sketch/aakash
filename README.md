@@ -54,3 +54,34 @@ brand/tools/build_seal.py   regenerates brand/seal from the Manrope and IBM Plex
 
 Use the full seal at 64px and above, and `seal-mini` below that (favicons, avatars).
 Colours: ink `#15121f`, lavender `#d9ccff`, violet `#5b3df5`, soft violet `#a48cff`.
+
+## Security
+
+The site is static: no server code, database, login, forms or cookies, so there is nothing
+on it to break into. The code in this repo is what visitors' browsers download, so keep
+secrets (passwords, API keys, phone numbers, private documents) out of it entirely.
+
+What the site does:
+
+- **Content-Security-Policy** (`<meta>` in every page, plus `_headers`): only files from this
+  domain may load. No inline scripts, no third-party scripts, styles, fonts or trackers.
+- **Self-hosted fonts** (`assets/fonts`, OFL licensed), so visitors' IPs aren't sent to Google.
+- **Clickjacking protection:** `frame-ancestors 'none'` / `X-Frame-Options: DENY` where headers
+  are supported, and a script check that blanks the page if it's framed.
+- **Email obfuscation:** the address is assembled by script, so it isn't in the HTML for scrapers.
+- **No metadata:** EXIF/XMP/ICC stripped from every image.
+- `rel="noopener noreferrer"` on external links; `/.well-known/security.txt` for reporting issues.
+
+`_headers` adds HSTS, `nosniff`, Referrer-Policy and Permissions-Policy on **Netlify or Cloudflare
+Pages**. GitHub Pages can't set custom headers, so hosting on Cloudflare Pages is the stronger
+option, and it also lets this repo stay **private**.
+
+Things only you can do (most real "hacks" of personal sites are account takeovers):
+
+1. Turn on two-factor authentication (an authenticator app or security key, not SMS) for
+   **GitHub**, your **domain registrar**, your **host** and the **Gmail** account. That last one
+   resets all the others.
+2. At the registrar, turn on **registrar lock** (transfer lock), **DNSSEC** and **WHOIS privacy**.
+3. Add a DNS **CAA** record so only your host's certificate authority can issue certificates
+   for the domain (`0 issue "letsencrypt.org"` for GitHub Pages and Netlify).
+4. Enforce HTTPS in the host's settings; protect the `main` branch on GitHub.

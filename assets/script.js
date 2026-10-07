@@ -1,5 +1,22 @@
 (() => {
-  document.getElementById("year").textContent = new Date().getFullYear();
+  "use strict";
+
+  // Refuse to render inside another site's frame (clickjacking).
+  if (window.top !== window.self) {
+    document.documentElement.style.display = "none";
+    try { window.top.location.replace(window.self.location.href); } catch (_) { /* cross-origin */ }
+    return;
+  }
+
+  const year = document.getElementById("year");
+  if (year) year.textContent = String(new Date().getFullYear());
+
+  // Assemble the email address at runtime so it isn't sitting in the HTML for scrapers.
+  document.querySelectorAll(".js-email").forEach((a) => {
+    const addr = `${a.dataset.u}@${a.dataset.d}`;
+    a.href = `mailto:${addr}`;
+    a.textContent = addr;
+  });
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
