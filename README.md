@@ -65,11 +65,11 @@ into `public/`, which Vercel serves; `src/`, `tools/`, `tests/` and `brand/` are
 
    | Variable | Example | Notes |
    |---|---|---|
-   | `SMTP_HOST` | `smtp.zoho.in` | Your mail provider's SMTP server |
-   | `SMTP_PORT` | `587` | 587 (STARTTLS) or 465 (TLS) |
-   | `SMTP_USER` | `hello@aakashremesh.com` | SMTP login |
-   | `SMTP_PASS` | *app password* | Use an app-specific password, never your main one |
-   | `MAIL_FROM` | `Aakash Remesh <hello@aakashremesh.com>` | Must be an address your SMTP account may send as |
+   | `SMTP_HOST` | `smtp.titan.email` | Titan Email (GoDaddy) outgoing server |
+   | `SMTP_PORT` | `465` | 465 (SSL/TLS) for Titan; 587 (STARTTLS) also works |
+   | `SMTP_USER` | `hello@aakashremesh.com` | Your full Titan email address |
+   | `SMTP_PASS` | *mailbox password* | The Titan mailbox password; store it only in Vercel |
+   | `MAIL_FROM` | `Aakash Remesh <hello@aakashremesh.com>` | Must be the same Titan address as `SMTP_USER` |
    | `OWNER_EMAIL` | `you@example.com` | Where bookings and messages arrive. Never sent to browsers |
    | `MEETING_URL` | `https://meet.google.com/abc-defg-hij` | Fixed video link for every call (optional) |
 
