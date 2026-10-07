@@ -38,7 +38,7 @@
   <link rel="preload" href="/assets/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/fraunces-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/styles.css">
-  <link rel="preload" as="image" href="/assets/img/aakash-center.webp">
+  <link rel="preload" as="image" href="/assets/img/hero-center.webp" fetchpriority="high">
   <link rel="alternate" type="text/markdown" href="/llms.txt" title="Summary for AI assistants">
 
   <script type="application/ld+json">
@@ -94,7 +94,10 @@
 
         <figure class="portrait" id="portrait">
           <div class="portrait__frame">
-            <img class="portrait__img is-active" data-look="center" src="/assets/img/aakash-center.webp" width="720" height="720" alt="Illustrated portrait of Aakash Remesh smiling, wearing glasses and a grey-and-black raglan tee">
+            <div class="portrait__face">
+              <img class="portrait__img is-active" data-look="center" src="/assets/img/hero-center.webp" width="1200" height="1200" fetchpriority="high" alt="Illustrated portrait of Aakash Remesh smiling, wearing glasses and a grey-and-black raglan tee">
+            </div>
+            <div class="portrait__glow" aria-hidden="true"></div>
           </div>
           {{SEAL}}
         </figure>

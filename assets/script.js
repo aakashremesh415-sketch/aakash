@@ -21,42 +21,100 @@
     a.href = `mailto:${a.dataset.u}@${a.dataset.d}`;
   });
 
-  /* ---------- Portrait looks toward the cursor (mouse devices only) ---------- */
+  /* ---------- Portrait follows the cursor ----------
+     The face turns continuously toward the pointer (3D tilt + parallax, spring-smoothed),
+     and the closest of five painted poses (center/up/down/left/right) crossfades in.
+     Touch devices get a slow idle sway instead; reduced-motion users get a still image. */
   const portrait = $("#portrait");
-  if (portrait && canHover && !reduceMotion) {
+  if (portrait && !reduceMotion) {
     const frame = $(".portrait__frame", portrait);
+    const face = $(".portrait__face", portrait);
     const imgs = { center: $(".portrait__img", portrait) };
-    // Extra poses are only downloaded where the effect can actually run.
-    for (const look of ["up", "right", "down", "left"]) {
-      const img = new Image(720, 720);
-      img.className = "portrait__img";
-      img.alt = "";
-      img.setAttribute("aria-hidden", "true");
-      img.decoding = "async";
-      img.src = `/assets/img/aakash-${look}.webp`;
-      frame.appendChild(img);
-      imgs[look] = img;
-    }
-    let current = "center";
-    let raf = 0;
-    const show = (look) => {
-      if (look === current) return;
-      imgs[current].classList.remove("is-active");
+    const target = { x: 0, y: 0 };
+    const cur = { x: 0, y: 0 };
+    let pose = "center";
+    let running = false;
+
+    const showPose = (look) => {
+      if (look === pose || !imgs[look]) return;
+      imgs[pose].classList.remove("is-active");
       imgs[look].classList.add("is-active");
-      current = look;
+      pose = look;
     };
-    window.addEventListener("pointermove", (e) => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        const r = portrait.getBoundingClientRect();
+
+    // Pick a pose from the smoothed direction, with hysteresis so it doesn't flicker at boundaries.
+    const choosePose = () => {
+      const mag = Math.hypot(cur.x, cur.y);
+      if (pose === "center" ? mag < 0.3 : mag < 0.2) return showPose("center");
+      if (Math.abs(cur.x) > Math.abs(cur.y) * 0.85) return showPose(cur.x > 0 ? "right" : "left");
+      showPose(cur.y < 0 ? "up" : "down");
+    };
+
+    const render = () => {
+      face.style.transform =
+        `translate3d(${(cur.x * 16).toFixed(2)}px, ${(cur.y * 12).toFixed(2)}px, 0) ` +
+        `rotateY(${(cur.x * 10).toFixed(2)}deg) rotateX(${(-cur.y * 8).toFixed(2)}deg) scale(1.08)`;
+      frame.style.setProperty("--gx", `${(50 + cur.x * 35).toFixed(1)}%`);
+      frame.style.setProperty("--gy", `${(35 + cur.y * 30).toFixed(1)}%`);
+    };
+
+    const tick = () => {
+      cur.x += (target.x - cur.x) * 0.09;
+      cur.y += (target.y - cur.y) * 0.09;
+      render();
+      if (canHover) choosePose();
+      if (Math.abs(target.x - cur.x) + Math.abs(target.y - cur.y) > 0.001) requestAnimationFrame(tick);
+      else running = false;
+    };
+    const kick = () => { if (!running) { running = true; requestAnimationFrame(tick); } };
+
+    if (canHover) {
+      // Load the other poses once the page has settled; they're only needed on mouse devices.
+      const loadPoses = () => {
+        for (const look of ["up", "right", "down", "left"]) {
+          const img = new Image(1200, 1200);
+          img.className = "portrait__img";
+          img.alt = "";
+          img.setAttribute("aria-hidden", "true");
+          img.decoding = "async";
+          img.src = `/assets/img/hero-${look}.webp`;
+          face.appendChild(img);
+          imgs[look] = img;
+        }
+      };
+      if (document.readyState === "complete") loadPoses(); else window.addEventListener("load", loadPoses, { once: true });
+
+      window.addEventListener("pointermove", (e) => {
+        const r = face.getBoundingClientRect();
         const dx = e.clientX - (r.left + r.width / 2);
-        const dy = e.clientY - (r.top + r.height * 0.38);
-        if (Math.hypot(dx, dy) < r.width * 0.28) return show("center");
-        if (Math.abs(dx) > Math.abs(dy) * 0.9) return show(dx > 0 ? "right" : "left");
-        show(dy < 0 ? "up" : "down");
-      });
-    }, { passive: true });
-    document.addEventListener("pointerleave", () => show("center"));
+        const dy = e.clientY - (r.top + r.height * 0.4);
+        // Normalise against the viewport so the face keeps following across the whole page.
+        target.x = Math.max(-1, Math.min(1, dx / (window.innerWidth * 0.45)));
+        target.y = Math.max(-1, Math.min(1, dy / (window.innerHeight * 0.55)));
+        kick();
+      }, { passive: true });
+      document.documentElement.addEventListener("pointerleave", () => { target.x = 0; target.y = 0; kick(); });
+    } else {
+      // Touch: a slow, gentle sway while the portrait is on screen.
+      let t0 = performance.now();
+      let visible = true;
+      const sway = (now) => {
+        if (!visible) return;
+        const t = (now - t0) / 1000;
+        cur.x = Math.sin(t * 0.55) * 0.35;
+        cur.y = Math.sin(t * 0.37 + 1) * 0.2;
+        render();
+        requestAnimationFrame(sway);
+      };
+      if ("IntersectionObserver" in window) {
+        new IntersectionObserver(([en]) => {
+          const was = visible;
+          visible = en.isIntersecting;
+          if (visible && !was) { t0 = performance.now() - 0; requestAnimationFrame(sway); }
+        }).observe(portrait);
+      }
+      requestAnimationFrame(sway);
+    }
   }
 
   /* ---------- Fade sections in as they scroll into view ---------- */
@@ -234,26 +292,45 @@
       }
     };
 
+    // Weekday (0 = Sunday) of a date in the visitor's time zone.
+    const weekdayIn = (d) => ({ Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 })[
+      new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short" }).format(d)];
+    const isWeekend = (d) => [0, 6].includes(weekdayIn(d));
+
+    // Every calendar day from today to the last offered day, so closed days are visible too.
     const showDays = () => {
       daysEl.replaceChildren();
-      let firstBtn = null;
-      for (const [key, list] of byDay) {
-        const d = list[0];
+      let firstOpen = null;
+      const keys = [...byDay.keys()];
+      const last = keys[keys.length - 1];
+      for (let i = 0, d = new Date(); i < 40; i++, d = new Date(d.getTime() + 86400_000)) {
+        const key = dayKey(d);
+        const list = byDay.get(key);
         const b = document.createElement("button");
         b.type = "button";
         b.className = "day";
-        b.setAttribute("aria-pressed", "false");
         b.innerHTML = "<small></small><strong></strong><small></small>";
         const [w, n, m] = b.children;
         w.textContent = fmt(d, { weekday: "short" });
         n.textContent = fmt(d, { day: "numeric" });
         m.textContent = fmt(d, { month: "short" });
-        b.setAttribute("aria-label", `${fmt(d, { weekday: "long", day: "numeric", month: "long" })}, ${list.length} times available`);
-        b.addEventListener("click", () => { pressOnly(daysEl, b); showSlots(key); });
+        const longDay = fmt(d, { weekday: "long", day: "numeric", month: "long" });
+        if (list) {
+          b.setAttribute("aria-pressed", "false");
+          b.setAttribute("aria-label", `${longDay}, ${list.length} ${list.length === 1 ? "time" : "times"} available`);
+          b.addEventListener("click", () => { pressOnly(daysEl, b); showSlots(key); });
+          if (!firstOpen) firstOpen = b;
+        } else {
+          const note = isWeekend(d) ? "Closed" : (firstOpen ? "Full" : "Not Available");
+          m.textContent = note;
+          m.className = "day__note";
+          b.disabled = true;
+          b.setAttribute("aria-label", `${longDay}, ${note.toLowerCase()}`);
+        }
         daysEl.appendChild(b);
-        if (!firstBtn) firstBtn = b;
+        if (key === last) break;
       }
-      if (firstBtn) firstBtn.click();
+      if (firstOpen) firstOpen.click();
     };
 
     const loadSlots = async () => {
@@ -266,6 +343,11 @@
         byDay = new Map();
         for (const iso of data.slots || []) {
           const d = new Date(iso);
+          // Weekends stay closed in the visitor's calendar too (e.g. Monday morning in India is Sunday evening in California).
+          if (isWeekend(d)) continue;
+          // Only offer reasonable local hours (7 AM to 9 PM in the visitor's own time zone).
+          const h = Number(new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", hourCycle: "h23" }).format(d));
+          if (h < 7 || h >= 21) continue;
           const k = dayKey(d);
           if (!byDay.has(k)) byDay.set(k, []);
           byDay.get(k).push(d);

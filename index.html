@@ -38,7 +38,7 @@
   <link rel="preload" href="/assets/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/fraunces-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/styles.css">
-  <link rel="preload" as="image" href="/assets/img/aakash-center.webp">
+  <link rel="preload" as="image" href="/assets/img/hero-center.webp" fetchpriority="high">
   <link rel="alternate" type="text/markdown" href="/llms.txt" title="Summary for AI assistants">
 
   <script type="application/ld+json">
@@ -546,7 +546,10 @@
 
         <figure class="portrait" id="portrait">
           <div class="portrait__frame">
-            <img class="portrait__img is-active" data-look="center" src="/assets/img/aakash-center.webp" width="720" height="720" alt="Illustrated portrait of Aakash Remesh smiling, wearing glasses and a grey-and-black raglan tee">
+            <div class="portrait__face">
+              <img class="portrait__img is-active" data-look="center" src="/assets/img/hero-center.webp" width="1200" height="1200" fetchpriority="high" alt="Illustrated portrait of Aakash Remesh smiling, wearing glasses and a grey-and-black raglan tee">
+            </div>
+            <div class="portrait__glow" aria-hidden="true"></div>
           </div>
           <svg class="seal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
   <circle class="s-bg" cx="60" cy="60" r="57"/>
@@ -926,7 +929,7 @@
               <div class="days" role="group" aria-labelledby="pick-day" data-days></div>
               <p class="step-title step-title--gap" id="pick-time">2. Pick a Time</p>
               <div class="slots" role="group" aria-labelledby="pick-time" data-slots></div>
-              <p class="tz-note">Times are shown in <strong data-tz>your time zone</strong>. Free 20-minute video call.</p>
+              <p class="tz-note">Times are shown in <strong data-tz>your time zone</strong>. Free 20-minute video call, Monday to Friday, booked at least two days ahead.</p>
             </div>
 
             <form data-book-form hidden novalidate>
