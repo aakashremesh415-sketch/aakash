@@ -1,7 +1,7 @@
-// SMTP email via nodemailer. Settings come from environment variables (see config.mjs).
-import { BOOKING, MAIL } from "./config.mjs";
-import { buildIcs } from "./ics.mjs";
-import { escapeHtml } from "./http.mjs";
+// SMTP email via nodemailer. Settings come from environment variables (see config.js).
+import { BOOKING, MAIL } from "./config.js";
+import { buildIcs } from "./ics.js";
+import { escapeHtml } from "./http.js";
 
 let transportOverride = null;
 /** Tests inject a transport with a sendMail() method. */

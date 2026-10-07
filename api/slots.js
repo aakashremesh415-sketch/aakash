@@ -1,10 +1,10 @@
 // GET /api/slots -> { durationMin, timeZone, slots: ISO[] }
-import { BOOKING, mailConfigured } from "../lib/config.mjs";
-import { generateSlots } from "../lib/slots.mjs";
-import { busyBetween } from "../lib/store.mjs";
-import { json } from "../lib/http.mjs";
+import { BOOKING, mailConfigured } from "./_lib/config.js";
+import { generateSlots } from "./_lib/slots.js";
+import { busyBetween } from "./_lib/store.js";
+import { json } from "./_lib/http.js";
 
-export default async (req) => {
+async function handler(req) {
   if (req.method !== "GET") return json(405, { ok: false, error: "Method not allowed." });
   // Without mail settings a booking can't be confirmed, so offer no times.
   if (!mailConfigured()) return json(503, { ok: false, error: "Booking is not set up yet." });
@@ -18,6 +18,6 @@ export default async (req) => {
     console.error("[slots]", err);
     return json(500, { ok: false, error: "Couldn't load times." });
   }
-};
+}
 
-export const config = { path: "/api/slots" };
+export const GET = handler;

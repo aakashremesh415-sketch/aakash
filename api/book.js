@@ -1,14 +1,14 @@
 // POST /api/book -> reserves a slot, emails Aakash, then sends the visitor a confirmation + invite.
 import { randomUUID } from "node:crypto";
-import { BOOKING, mailConfigured } from "../lib/config.mjs";
-import { isOfferedSlot, slotEnd } from "../lib/slots.mjs";
-import { busyBetween, release, reserve, upcomingCountForEmail } from "../lib/store.mjs";
-import { sendBookingConfirmation, sendBookingToOwner } from "../lib/mail.mjs";
-import { EMAIL_RE, clean, cleanText, clientIp, json, limited, looksLikeBot, readJson, sameOrigin, validTz } from "../lib/http.mjs";
+import { BOOKING, mailConfigured } from "./_lib/config.js";
+import { isOfferedSlot, slotEnd } from "./_lib/slots.js";
+import { busyBetween, release, reserve, upcomingCountForEmail } from "./_lib/store.js";
+import { sendBookingConfirmation, sendBookingToOwner } from "./_lib/mail.js";
+import { EMAIL_RE, clean, cleanText, clientIp, json, limited, looksLikeBot, readJson, sameOrigin, validTz } from "./_lib/http.js";
 
-export default async (req, context) => {
+async function handler(req) {
   if (!sameOrigin(req)) return json(403, { ok: false, error: "Forbidden." });
-  if (limited("book", clientIp(req, context), 5)) return json(429, { ok: false, error: "Too many requests. Please try again in a few minutes." });
+  if (limited("book", clientIp(req), 5)) return json(429, { ok: false, error: "Too many requests. Please try again in a few minutes." });
   if (!mailConfigured()) return json(503, { ok: false, error: "Online booking isn't available right now. Please send a message instead." });
 
   const { body, error } = await readJson(req);
@@ -67,6 +67,6 @@ export default async (req, context) => {
     console.error("[book]", err);
     return json(500, { ok: false, error: "Something went wrong. Please try again, or send a message instead." });
   }
-};
+}
 
-export const config = { path: "/api/book" };
+export const POST = handler;

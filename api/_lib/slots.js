@@ -1,4 +1,4 @@
-import { BOOKING } from "./config.mjs";
+import { BOOKING } from "./config.js";
 
 // ---- Time zone helpers (no external dependency, DST-safe) -----------------
 
@@ -33,13 +33,13 @@ function ymdInTz(date, tz) {
 
 /** All bookable start times, minus anything that clashes with `busy` (array of {start, end} Dates). */
 export function generateSlots(busy, now = new Date(), cfg = BOOKING) {
-  const { hostTimeZone: tz, durationMin, bufferMin, minNoticeHours, horizonDays, workingDays, windows } = cfg;
+  const { hostTimeZone: tz, durationMin, bufferMin, minNoticeHours, horizonDays, workingDays, windows, leadDays = 0 } = cfg;
   const earliest = now.getTime() + minNoticeHours * 3600_000;
   const step = durationMin + bufferMin;
   const today = ymdInTz(now, tz);
   const out = [];
 
-  for (let i = 0; i <= horizonDays; i++) {
+  for (let i = leadDays; i <= horizonDays; i++) {
     const day = new Date(Date.UTC(today.y, today.m - 1, today.d + i));
     if (!workingDays.includes(day.getUTCDay())) continue;
     const y = day.getUTCFullYear(), m = day.getUTCMonth() + 1, d = day.getUTCDate();

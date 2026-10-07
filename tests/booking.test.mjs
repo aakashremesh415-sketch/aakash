@@ -7,14 +7,14 @@ process.env.MAIL_FROM = "Aakash Remesh <hello@aakashremesh.com>";
 process.env.OWNER_EMAIL = "owner@example.com";
 process.env.MEETING_URL = "https://meet.example.com/aakash";
 
-const { BOOKING } = await import("../netlify/lib/config.mjs");
-const { generateSlots, isOfferedSlot } = await import("../netlify/lib/slots.mjs");
-const { buildIcs } = await import("../netlify/lib/ics.mjs");
-const store = await import("../netlify/lib/store.mjs");
-const mail = await import("../netlify/lib/mail.mjs");
-const slotsFn = (await import("../netlify/functions/slots.mjs")).default;
-const bookFn = (await import("../netlify/functions/book.mjs")).default;
-const messageFn = (await import("../netlify/functions/message.mjs")).default;
+const { BOOKING } = await import("../api/_lib/config.js");
+const { generateSlots, isOfferedSlot } = await import("../api/_lib/slots.js");
+const { buildIcs } = await import("../api/_lib/ics.js");
+const store = await import("../api/_lib/store.js");
+const mail = await import("../api/_lib/mail.js");
+const slotsFn = (await import("../api/slots.js")).GET;
+const bookFn = (await import("../api/book.js")).POST;
+const messageFn = (await import("../api/message.js")).POST;
 
 let sent = [];
 let failOwner = false;
@@ -33,7 +33,7 @@ let ipN = 0;
 const req = (path, body, { origin = "https://aakashremesh.com", method = "POST" } = {}) =>
   new Request(`https://aakashremesh.com${path}`, {
     method,
-    headers: { "content-type": "application/json", origin, "x-nf-client-connection-ip": `10.0.0.${++ipN}` },
+    headers: { "content-type": "application/json", origin, "x-real-ip": `10.0.0.${++ipN}` },
     body: method === "POST" ? JSON.stringify(body) : undefined,
   });
 
@@ -45,6 +45,22 @@ async function firstSlot() {
 }
 
 // ---- Slot generation ----------------------------------------------------------
+
+test("nothing is bookable today or tomorrow; the first day is two days out (IST)", () => {
+  const now = new Date("2026-10-07T05:00:00Z"); // Wednesday 10:30 IST
+  const slots = generateSlots([], now);
+  const istDay = (d) => new Date(d.getTime() + 5.5 * 3600_000).toISOString().slice(0, 10);
+  assert.equal(istDay(slots[0]), "2026-10-09"); // Friday
+  assert.ok(!slots.some((s) => ["2026-10-07", "2026-10-08"].includes(istDay(s))));
+});
+
+test("Saturday and Sunday (IST) are never offered", () => {
+  const slots = generateSlots([], new Date("2026-10-07T05:00:00Z"));
+  for (const s of slots) {
+    const d = new Date(s.getTime() + 5.5 * 3600_000).getUTCDay();
+    assert.ok(d >= 1 && d <= 5, `weekend slot ${s.toISOString()}`);
+  }
+});
 
 test("slots fall inside the IST windows on weekdays, after the notice period", () => {
   const now = new Date("2026-10-07T00:00:00Z"); // Wednesday
@@ -189,7 +205,7 @@ test("missing fields and bad emails are rejected", async () => {
 test("rate limit kicks in for one IP", async () => {
   reset();
   const make = () => new Request("https://aakashremesh.com/api/book", {
-    method: "POST", headers: { "content-type": "application/json", origin: "https://aakashremesh.com", "x-nf-client-connection-ip": "9.9.9.9" },
+    method: "POST", headers: { "content-type": "application/json", origin: "https://aakashremesh.com", "x-real-ip": "9.9.9.9" },
     body: JSON.stringify({ ...human }),
   });
   const codes = [];
@@ -212,7 +228,7 @@ test("contact message goes only to the owner, reply-to the sender, HTML-escaped"
 test("without mail settings the endpoints say they're unavailable", async () => {
   const saved = process.env.OWNER_EMAIL;
   // config is read at import time, so check the guard function directly.
-  const { mailConfigured, MAIL } = await import("../netlify/lib/config.mjs");
+  const { mailConfigured, MAIL } = await import("../api/_lib/config.js");
   const keep = MAIL.owner;
   MAIL.owner = "";
   assert.equal(mailConfigured(), false);

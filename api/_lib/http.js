@@ -24,13 +24,13 @@ export const validTz = (tz) => {
 const ALLOWED_HOSTS = (process.env.ALLOWED_ORIGINS || "aakashremesh.com,www.aakashremesh.com")
   .split(",").map((s) => s.trim()).filter(Boolean);
 
-/** Rejects cross-site form posts. Netlify preview/branch URLs (*.netlify.app) are allowed too. */
+/** Rejects cross-site form posts. Vercel preview URLs (*.vercel.app) are allowed too. */
 export function sameOrigin(req) {
   const origin = req.headers.get("origin");
   if (!origin) return true; // non-browser clients; the other checks still apply
   try {
     const { hostname } = new URL(origin);
-    return ALLOWED_HOSTS.includes(hostname) || hostname.endsWith(".netlify.app") || hostname === "localhost" || hostname === "127.0.0.1";
+    return ALLOWED_HOSTS.includes(hostname) || hostname.endsWith(".vercel.app") || hostname === "localhost" || hostname === "127.0.0.1";
   } catch { return false; }
 }
 
@@ -45,8 +45,8 @@ export function limited(bucket, ip, limit = 5) {
   return arr.length > limit;
 }
 
-export const clientIp = (req, context) =>
-  context?.ip || req.headers.get("x-nf-client-connection-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+export const clientIp = (req) =>
+  req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 
 /** Honeypot filled, or the form was submitted faster than a person could type it. */
 export const looksLikeBot = (body) => Boolean(clean(body.website)) || Number(body.elapsedMs) < 2500;

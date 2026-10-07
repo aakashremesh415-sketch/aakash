@@ -1,11 +1,11 @@
 // POST /api/message -> emails the contact-form message to Aakash (reply-to the sender).
-import { mailConfigured } from "../lib/config.mjs";
-import { sendMessageToOwner } from "../lib/mail.mjs";
-import { EMAIL_RE, clean, cleanText, clientIp, json, limited, looksLikeBot, readJson, sameOrigin } from "../lib/http.mjs";
+import { mailConfigured } from "./_lib/config.js";
+import { sendMessageToOwner } from "./_lib/mail.js";
+import { EMAIL_RE, clean, cleanText, clientIp, json, limited, looksLikeBot, readJson, sameOrigin } from "./_lib/http.js";
 
-export default async (req, context) => {
+async function handler(req) {
   if (!sameOrigin(req)) return json(403, { ok: false, error: "Forbidden." });
-  if (limited("message", clientIp(req, context), 5)) return json(429, { ok: false, error: "Too many messages. Please try again in a few minutes." });
+  if (limited("message", clientIp(req), 5)) return json(429, { ok: false, error: "Too many messages. Please try again in a few minutes." });
   if (!mailConfigured()) return json(503, { ok: false, error: "The contact form isn't available right now. Please reach me on LinkedIn." });
 
   const { body, error } = await readJson(req);
@@ -27,6 +27,6 @@ export default async (req, context) => {
     console.error("[message] send failed", err);
     return json(502, { ok: false, error: "Your message couldn't be sent. Please try again, or reach me on LinkedIn." });
   }
-};
+}
 
-export const config = { path: "/api/message" };
+export const POST = handler;

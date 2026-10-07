@@ -1,10 +1,17 @@
 // Booking and mail settings. Everything can be overridden with environment
-// variables in Netlify (Site configuration → Environment variables).
+// variables in Vercel (Project → Settings → Environment Variables).
 
 const env = (k, d) => (process.env[k] ?? "").trim() || d;
 const num = (k, d) => {
   const n = Number(env(k, ""));
   return Number.isFinite(n) && n > 0 ? n : d;
+};
+
+// Like num(), but 0 is a valid value.
+const whole = (k, d) => {
+  const v = env(k, "");
+  const n = Number(v);
+  return v !== "" && Number.isInteger(n) && n >= 0 ? n : d;
 };
 
 // "10:00-13:00,18:30-22:00" -> [[600, 780], [1110, 1320]] (minutes after midnight)
@@ -29,8 +36,10 @@ export const BOOKING = {
   workingDays: env("BOOKING_DAYS", "1,2,3,4,5").split(",").map(Number),
   // Default windows overlap New Zealand/Europe (morning IST) and the US (evening IST).
   windows: parseWindows(env("BOOKING_WINDOWS", "10:00-13:00,18:30-22:00")),
-  minNoticeHours: num("BOOKING_MIN_NOTICE_HOURS", 12),
-  horizonDays: num("BOOKING_HORIZON_DAYS", 14),
+  // Earliest bookable day = today + leadDays (in hostTimeZone). 2 = book today, meet in two days at the earliest.
+  leadDays: whole("BOOKING_LEAD_DAYS", 2),
+  minNoticeHours: num("BOOKING_MIN_NOTICE_HOURS", 1),
+  horizonDays: num("BOOKING_HORIZON_DAYS", 21),
   maxUpcomingPerEmail: 2,
   meetingUrl: env("MEETING_URL", ""),
 };

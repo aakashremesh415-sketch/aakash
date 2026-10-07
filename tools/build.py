@@ -29,12 +29,14 @@ SERVICES = [
 ]
 
 CREDENTIALS = [
-    ("QuickBooks Online Certification, Level 2", "Intuit", None),
-    ("Intuit Enterprise Suite Certification", "Intuit", None),
-    ("Intuit Bookkeeping Certification", "Intuit", None),
+    ("QuickBooks Online Certification, Level 2", "Intuit", "2026-04-28"),
     ("QuickBooks ProAdvisor Academy, Level 1", "Intuit", "2025-05-21"),
+    ("QuickBooks Online Certification", "Intuit", "2024-03-10"),
+    ("Intuit Enterprise Suite Certification", "Intuit", "2026-04-30"),
+    ("Intuit Bookkeeping Certification", "Intuit", None),
+    ("Xero Certified Professional, Level 2", "Xero", "2025-09-30"),
+    ("Xero Certified Associate, Level 1", "Xero", "2025-09-30"),
     ("Certified Zoho Books Associate", "Zoho Corporation", "2026-05-07"),
-    ("Xero Advisor Certification", "Xero", "2024-04-16"),
     ("Career Essentials in Data Analysis", "Microsoft and LinkedIn", "2023-12-14"),
 ]
 
@@ -159,3 +161,23 @@ for key, value in {
 
 (ROOT / "index.html").write_text(page)
 print(f"index.html built: {len(page) // 1024} KB, {len(faq)} FAQs")
+
+# ---- Deployable output -------------------------------------------------------
+# Vercel serves only public/. Copy the site files there, so src/, tools/,
+# tests/ and brand/ are never deployed. Functions live in api/ and deploy separately.
+import shutil
+
+OUT = ROOT / "public"
+PUBLISH = ["index.html", "404.html", "llms.txt", "robots.txt", "sitemap.xml", "favicon.ico", "assets", ".well-known"]
+if OUT.exists():
+    shutil.rmtree(OUT)
+OUT.mkdir()
+for name in PUBLISH:
+    src = ROOT / name
+    if src.is_dir():
+        shutil.copytree(src, OUT / name)
+    elif src.exists():
+        shutil.copy2(src, OUT / name)
+    else:
+        raise SystemExit(f"missing site file: {name}")
+print(f"public/ ready: {sum(1 for _ in OUT.rglob('*') if _.is_file())} files")
