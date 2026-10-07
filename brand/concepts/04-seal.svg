@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+<defs><path id="ring" d="M60 60 m-44 0 a44 44 0 1 1 88 0 a44 44 0 1 1 -88 0"/></defs>
+<circle cx="60" cy="60" r="57" fill="#15121f"/>
+<circle cx="60" cy="60" r="35" fill="none" stroke="#a48cff" stroke-width="1.5"/>
+<text font-family="IBM Plex Mono,monospace" font-weight="500" font-size="9.6" fill="#d9ccff"><textPath href="#ring" startOffset="0" textLength="272" lengthAdjust="spacing">AAKASH REMESH ✦ BOOKS IN BALANCE ✦</textPath></text>
+<text x="60" y="66" text-anchor="middle" font-family="Manrope,sans-serif" font-weight="800" font-size="27" letter-spacing="-1" fill="#d9ccff">AR</text>
+<path d="M44 74 H76 M44 78.5 H76" stroke="#a48cff" stroke-width="2" stroke-linecap="round"/>
+</svg>

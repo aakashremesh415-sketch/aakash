@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" rx="28" fill="#d9ccff"/>
+<defs><clipPath id="c"><circle cx="46" cy="60" r="30"/></clipPath></defs>
+<circle cx="74" cy="60" r="30" fill="#5b3df5" clip-path="url(#c)"/>
+<circle cx="46" cy="60" r="30" fill="none" stroke="#15121f" stroke-width="5"/>
+<circle cx="74" cy="60" r="30" fill="none" stroke="#15121f" stroke-width="5"/>
+<text x="30.5" y="68" text-anchor="middle" font-family="Manrope,sans-serif" font-weight="800" font-size="21" fill="#15121f">A</text>
+<text x="89.5" y="68" text-anchor="middle" font-family="Manrope,sans-serif" font-weight="800" font-size="21" fill="#15121f">R</text>
+<path d="M53.5 60 l4.5 5 l8.5 -10" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

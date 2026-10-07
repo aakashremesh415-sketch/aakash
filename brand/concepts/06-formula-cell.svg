@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" rx="28" fill="#15121f"/>
+<path d="M14 40 H106 M14 80 H106 M30 22 V98 M90 22 V98" stroke="#2d2645" stroke-width="2"/>
+<rect x="30" y="40" width="60" height="40" fill="#15121f" stroke="#a48cff" stroke-width="4"/>
+<rect x="85" y="75" width="10" height="10" fill="#a48cff" stroke="#15121f" stroke-width="2"/>
+<text x="60" y="69" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="500" font-size="23" fill="#d9ccff">=AR</text>
+</svg>

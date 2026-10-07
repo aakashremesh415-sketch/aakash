@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 120" role="img" aria-label="Aakash Remesh — Accounting Systems Consultant">
+  <style>.n{font:800 44px Manrope,'Helvetica Neue',Arial,sans-serif;letter-spacing:-1.2px}.s{font:500 13.5px 'IBM Plex Mono',ui-monospace,Menlo,monospace;letter-spacing:2.6px}</style>
+  
+  <g transform="translate(18 18) scale(1.3125)">
+    <rect width="64" height="64" rx="16" fill="#15121f"/>
+  <g transform="translate(0 -2)">
+    <g fill="none" stroke="#d9ccff" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M13 45 L31 13 L31 45"/>
+      <path d="M21.2 32 H40.5 A9.5 9.5 0 0 0 40.5 13 H31"/>
+      <path d="M39 32 L50 45"/>
+    </g>
+    <g stroke="#a48cff" stroke-width="2.6" stroke-linecap="round">
+      <path d="M13 51.5 H50"/>
+      <path d="M13 56 H50"/>
+    </g>
+  </g>
+  </g
+  ><text class="n" x="124" y="68" fill="#15121f">Aakash Remesh</text>
+  <text class="s" x="126" y="94" fill="#5b3df5">ACCOUNTING SYSTEMS CONSULTANT</text>
+</svg>
