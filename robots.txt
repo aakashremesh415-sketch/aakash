@@ -1,4 +1,11 @@
+# Search engines and AI assistants are welcome to read and cite this site.
 User-agent: *
 Allow: /
 Disallow: /brand/
+Disallow: /src/
+Disallow: /tools/
+Disallow: /tests/
+Disallow: /netlify/
+Disallow: /api/
+
 Sitemap: https://aakashremesh.com/sitemap.xml

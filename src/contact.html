@@ -1,0 +1,90 @@
+          <div class="tabs" role="tablist" aria-label="How would you like to get in touch?">
+            <button class="tab" type="button" role="tab" id="tab-book" aria-selected="true" aria-controls="panel-book">Book a Call</button>
+            <button class="tab" type="button" role="tab" id="tab-msg" aria-selected="false" aria-controls="panel-msg" tabindex="-1">Send a Message</button>
+          </div>
+
+          <div class="tabpanel" role="tabpanel" id="panel-book" aria-labelledby="tab-book">
+            <noscript><p>Online booking needs JavaScript. You can reach me on <a href="https://www.linkedin.com/in/aakashremesh/">LinkedIn</a> instead.</p></noscript>
+            <p data-book-loading>Loading available times…</p>
+
+            <div data-book-picker hidden>
+              <p class="step-title" id="pick-day">1. Pick a Day</p>
+              <div class="days" role="group" aria-labelledby="pick-day" data-days></div>
+              <p class="step-title step-title--gap" id="pick-time">2. Pick a Time</p>
+              <div class="slots" role="group" aria-labelledby="pick-time" data-slots></div>
+              <p class="tz-note">Times are shown in <strong data-tz>your time zone</strong>. Free 20-minute video call.</p>
+            </div>
+
+            <form data-book-form hidden novalidate>
+              <p class="picked" data-picked aria-live="polite"></p>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="b-name">Full Name</label>
+                  <input id="b-name" name="fullName" autocomplete="name" required maxlength="120">
+                </div>
+                <div class="field">
+                  <label for="b-email">Work Email</label>
+                  <input id="b-email" name="email" type="email" autocomplete="email" required maxlength="160">
+                </div>
+                <div class="field field--full">
+                  <label for="b-company">Company</label>
+                  <input id="b-company" name="company" autocomplete="organization" required maxlength="160">
+                </div>
+                <div class="field field--full">
+                  <label for="b-notes">What's Going On With Your Books? <span class="hint">(optional)</span></label>
+                  <textarea id="b-notes" name="notes" maxlength="1500" placeholder="Software you use, number of entities, what's breaking…"></textarea>
+                </div>
+              </div>
+              <div class="hp" aria-hidden="true"><label for="b-website">Website</label><input id="b-website" name="website" tabindex="-1" autocomplete="off"></div>
+              <div class="form-actions">
+                <button class="btn" type="submit">Confirm Booking</button>
+                <button class="btn btn--ghost" type="button" data-change-time>Change Time</button>
+              </div>
+              <p class="form-status" role="status" aria-live="polite" data-status></p>
+              <p class="privacy-note">Your details are used only to arrange this call. You'll get a calendar invite by email.</p>
+            </form>
+
+            <div data-book-unavailable hidden>
+              <p>Online booking isn't available right now. Send me a message and I'll reply with a few times that suit you.</p>
+              <button class="btn" type="button" data-goto-msg>Send a Message</button>
+            </div>
+
+            <div class="success" data-book-success hidden tabindex="-1">
+              <h3>You're Booked.</h3>
+              <p data-success-text></p>
+              <p>A calendar invite is on its way to your inbox.</p>
+            </div>
+          </div>
+
+          <div class="tabpanel" role="tabpanel" id="panel-msg" aria-labelledby="tab-msg" hidden>
+            <form data-msg-form novalidate>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="m-name">Full Name</label>
+                  <input id="m-name" name="fullName" autocomplete="name" required maxlength="120">
+                </div>
+                <div class="field">
+                  <label for="m-email">Email</label>
+                  <input id="m-email" name="email" type="email" autocomplete="email" required maxlength="160">
+                </div>
+                <div class="field field--full">
+                  <label for="m-company">Company <span class="hint">(optional)</span></label>
+                  <input id="m-company" name="company" autocomplete="organization" maxlength="160">
+                </div>
+                <div class="field field--full">
+                  <label for="m-message">Message</label>
+                  <textarea id="m-message" name="message" required maxlength="4000" placeholder="Tell me about your books and what you need help with."></textarea>
+                </div>
+              </div>
+              <div class="hp" aria-hidden="true"><label for="m-website">Website</label><input id="m-website" name="website" tabindex="-1" autocomplete="off"></div>
+              <div class="form-actions">
+                <button class="btn" type="submit">Send Message</button>
+              </div>
+              <p class="form-status" role="status" aria-live="polite" data-status></p>
+              <p class="privacy-note">Your details are used only to reply to you.</p>
+            </form>
+            <div class="success" data-msg-success hidden tabindex="-1">
+              <h3>Message Sent.</h3>
+              <p>Thanks — I'll get back to you by email.</p>
+            </div>
+          </div>

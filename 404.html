@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
+  <meta name="robots" content="noindex">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; upgrade-insecure-requests">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Page not found — Aakash Remesh</title>
   <link rel="icon" href="/favicon.ico" sizes="any">
@@ -11,16 +12,12 @@
   <link rel="stylesheet" href="/assets/styles.css">
 </head>
 <body>
-  <main class="section">
-    <div class="wrap contact__inner">
-      <img class="contact__face" src="/assets/img/aakash-down.webp" width="160" height="160" alt="">
-      <div>
-        <p class="eyebrow">404</p>
-        <h2>This Page Doesn't Reconcile.</h2>
-        <p class="lead">Whatever you were looking for isn't here.</p>
-        <div class="hero__cta"><a class="btn" href="/">Back to the Homepage</a></div>
-      </div>
-    </div>
+  <main class="notfound">
+    <img class="notfound__face" src="/assets/img/aakash-down.webp" width="160" height="160" alt="">
+    <p class="eyebrow">404</p>
+    <h1>This Page Doesn't Reconcile.</h1>
+    <p class="lead">Whatever you were looking for isn't here.</p>
+    <p><a class="btn" href="/">Back to the Homepage</a></p>
   </main>
   <script src="/assets/script.js" defer></script>
 </body>

@@ -1,0 +1,38 @@
+[
+  {
+    "q": "What does a bookkeeping and accounting systems consultant do?",
+    "a": "An accounting systems consultant sets up, cleans up and connects the software a business uses to keep its books, so the numbers are accurate and month-end close runs smoothly. I configure the Chart of Accounts and opening balances, connect bank feeds, payment processors and sales channels, migrate data between platforms, fix historical errors, and document the process so your team can keep it running."
+  },
+  {
+    "q": "Which accounting software do you work with?",
+    "a": "I work in QuickBooks Online (Level 2 certified), Intuit Enterprise Suite, Sage Intacct, Oracle NetSuite, Zoho Books (certified) and Xero (advisor certified). I also connect them to A2X, MyWorks, Shopify, Amazon, Stripe, PayPal, Bill.com, Dext and Hubdoc, and build reporting in Excel, Power BI, Looker Studio and Syft Analytics."
+  },
+  {
+    "q": "Can you migrate QuickBooks Desktop to QuickBooks Online, or move from Xero to another platform?",
+    "a": "Yes. I handle migrations end to end: mapping the Chart of Accounts, validating opening balances, reconciling historical data after the move, and reconnecting integrations, so nothing is lost and the first close on the new platform ties out. I've moved clients from QuickBooks Desktop, Xero and spreadsheets to QuickBooks Online, Zoho Books and Sage Intacct."
+  },
+  {
+    "q": "Do you work with Shopify and Amazon sellers?",
+    "a": "Yes. eCommerce is one of my main specialties. I reconcile Shopify Payments, Amazon, PayPal and Stripe payouts through A2X and MyWorks so sales, fees, refunds and reserves post to the right accounts, and I set up inventory and COGS tracking so gross margin is accurate."
+  },
+  {
+    "q": "Can you handle multi-entity and intercompany accounting?",
+    "a": "Yes. I manage due-to and due-from accounts, intercompany transactions and eliminations, and consolidated reporting for holding groups and businesses with several subsidiaries, in Intuit Enterprise Suite, Sage Intacct and NetSuite."
+  },
+  {
+    "q": "Which countries and time zones do you work with?",
+    "a": "I've worked with clients in the United States, India, New Zealand and Europe. I'm based in Kerala, India (IST, UTC+5:30) and work remotely. The booking calendar on this page shows available times in your own time zone."
+  },
+  {
+    "q": "How do you keep my financial data secure?",
+    "a": "I prefer to work inside your own systems through an accountant or user invite, so you never need to share your password, and you can remove my access the moment an engagement ends. I'm happy to sign an NDA before we start."
+  },
+  {
+    "q": "What do I get at the end of an engagement?",
+    "a": "Clean, reconciled books on a correctly configured platform, plus written SOPs for the processes we set up, so your team can run month-end without depending on me."
+  },
+  {
+    "q": "How do we get started?",
+    "a": "Book a free 20-minute call using the calendar on this page, or send a message describing your setup and what's going wrong. On the call we'll look at your current setup and agree on the next step."
+  }
+]
