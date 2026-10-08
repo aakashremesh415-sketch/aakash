@@ -20,6 +20,7 @@ assets/                 styles, script, fonts (self-hosted), images, résumé PD
 api/                    Vercel functions: /api/slots, /api/book, /api/message
 api/_lib/               booking config, slot logic, calendar invites, SMTP mail, storage
 tests/                  backend tests (npm test)
+tools/google-auth.mjs   one-time helper for the Google Meet refresh token (run locally)
 brand/                  logo set and concepts
 vercel.json             Vercel settings: output directory, security headers
 public/                 build output (generated, not committed)
@@ -45,6 +46,27 @@ certificate):
    `<img …>` **as the first child**, with `data-caption` (shown in the viewer) and `alt`.
 3. Update the `cert__meta` line if needed (e.g. "Intuit · Since 2025 · Renewed 2026"),
    then run the build.
+
+### Adding a testimonial
+
+Reviews live in `src/testimonials.json`; the Client Feedback section shows them as cards
+(nothing is shown while the list is empty). Copy each review **word for word** from your
+Upwork profile (Work History → the job → the client's feedback) and add an entry:
+
+```json
+[
+  {
+    "quote": "Exact text of the client's review.",
+    "name": "Client name as Upwork shows it, e.g. Thomas O.",
+    "project": "QuickBooks Online reconciliation",
+    "date": "Jun 2026",
+    "rating": 5
+  }
+]
+```
+
+Only use real reviews, unchanged (trimming with "…" is fine). Ask the client first if you
+want to show their full name or company. Then run the build.
 
 ### Regenerating the résumé PDF
 
@@ -73,7 +95,7 @@ into `public/`, which Vercel serves; `src/`, `tools/`, `tests/` and `brand/` are
    | `SMTP_PASS` | *mailbox password* | The Titan mailbox password; store it only in Vercel |
    | `MAIL_FROM` | `Aakash Remesh <hello@aakashremesh.com>` | Must be the same Titan address as `SMTP_USER` |
    | `OWNER_EMAIL` | `you@example.com` | Where bookings and messages arrive. Never sent to browsers |
-   | `MEETING_URL` | `https://meet.google.com/abc-defg-hij` | Fixed video link, used when Teams isn't set up (optional) |
+   | `MEETING_URL` | `https://meet.google.com/abc-defg-hij` | Fixed video link: used when per-call links aren't set up, or as the backup if Google can't be reached |
 
    Optional booking settings (defaults in brackets):
    `BOOKING_TZ` [`Asia/Kolkata`], `BOOKING_WINDOWS` [`10:00-13:00,18:30-22:00`],
@@ -90,7 +112,57 @@ With Gmail, use `smtp.gmail.com`, port 465, and a Google **app password** (needs
 Verification). A mailbox on your own domain (Zoho Mail, Google Workspace) delivers more
 reliably and looks more professional.
 
-### Teams meeting links (optional)
+### Google Meet links (recommended)
+
+Every booking gets its own Google Meet: the site creates an event in your Google Calendar
+(no guests, so Google emails nobody) and puts the unique Meet link in both emails and the
+calendar invite. Works with a free Gmail account or Google Workspace.
+
+**Quick start (no setup):** in Google Calendar create a recurring event with a Meet link
+(or open meet.google.com → *New meeting → Create a meeting for later*) and set that link
+as `MEETING_URL`. Every call then uses the same link.
+
+**Unique link per call** (about 10 minutes, once):
+
+1. [console.cloud.google.com](https://console.cloud.google.com) → create a project, e.g.
+   `aakashremesh-booking`.
+2. **APIs & Services → Library** → enable **Google Calendar API**.
+3. **APIs & Services → OAuth consent screen** (Google Auth Platform): User type **External**,
+   app name `aakashremesh.com booking`, your email as support and developer contact.
+   Under **Data access** add the scope `.../auth/calendar.events`. Then under **Audience**
+   press **Publish app** (status *In production*). Leave it unverified: you'll see a
+   "Google hasn't verified this app" warning once, which is fine because you're the only user.
+   *Don't leave it in "Testing": in testing, the token stops working after 7 days.*
+4. **Credentials → Create credentials → OAuth client ID → Desktop app**. Copy the client ID
+   and client secret.
+5. On your own computer, in this repo folder:
+   ```sh
+   GOOGLE_CLIENT_ID=… GOOGLE_CLIENT_SECRET=… node tools/google-auth.mjs
+   ```
+   Open the link it prints, sign in with the Google account whose calendar should host the
+   calls, press *Advanced → Go to … (unsafe)* on the unverified-app warning, allow access,
+   and copy the refresh token it prints.
+6. Add to Vercel environment variables (Production), then redeploy:
+
+   | Variable | Value |
+   |---|---|
+   | `GOOGLE_CLIENT_ID` | From step 4 |
+   | `GOOGLE_CLIENT_SECRET` | From step 4 |
+   | `GOOGLE_REFRESH_TOKEN` | From step 5 |
+   | `GOOGLE_CALENDAR_ID` | Optional; defaults to `primary` (your main calendar) |
+
+7. Book a test call: the event appears in your Google Calendar with a Meet link, and both
+   emails carry the same link.
+
+If Google can't be reached when someone books, the booking still goes through with
+`MEETING_URL`, and the error appears in Vercel's function logs. If you ever change your
+Google password or remove the app's access (myaccount.google.com → Security → Third-party
+access), run step 5 again and replace `GOOGLE_REFRESH_TOKEN`.
+
+### Teams meeting links (alternative)
+
+Used only when the Google variables above are not set.
+
 
 With a **Microsoft 365 business account** that includes Teams, every booking gets its own
 Teams meeting: the site creates it in your Outlook calendar (no attendees, so Outlook sends

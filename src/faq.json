@@ -32,7 +32,11 @@
     "a": "Clean, reconciled books on a correctly configured platform, plus written SOPs for the processes we set up, so your team can run month-end without depending on me."
   },
   {
+    "q": "How do you charge: fixed price, hourly or monthly?",
+    "a": "All three, depending on the work. Setups, migrations and cleanups are usually a fixed-scope project with an agreed price and timeline. Ongoing month-end close and reconciliations run on a monthly retainer. Reviews, second opinions and training are billed hourly. You get a written scope before any work starts."
+  },
+  {
     "q": "How do we get started?",
-    "a": "Book a free 20-minute call using the calendar on this page, or send a message describing your setup and what's going wrong. On the call we'll look at your current setup and agree on the next step."
+    "a": "Book a free 20-minute call using the calendar on this page, or send a message describing your setup and what's going wrong. Calls happen on Google Meet; the link arrives with your confirmation email and calendar invite. On the call we'll look at your current setup and agree on the next step."
   }
 ]

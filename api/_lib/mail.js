@@ -31,25 +31,28 @@ const fromAddress = () => {
   return m ? { name: m[1].replace(/^"|"$/g, "") || MAIL.ownerName, address: m[2] } : { name: MAIL.ownerName, address: MAIL.from };
 };
 const owner = () => ({ name: MAIL.ownerName, address: MAIL.owner });
-/** The join link for this booking: its own Teams meeting if one was created, else MEETING_URL. */
+/** The join link for this booking: its own Meet/Teams meeting if one was created, else MEETING_URL. */
 const joinUrl = (b) => b.meetingUrl || BOOKING.meetingUrl || "";
+/** "Google Meet", "Microsoft Teams", or a guess from the fixed MEETING_URL. */
+const providerOf = (b) => b.meetingProvider ||
+  (/^https:\/\/meet\.google\.com\//.test(joinUrl(b)) ? "Google Meet" : /^https:\/\/teams\.(microsoft|live)\.com\//.test(joinUrl(b)) ? "Microsoft Teams" : "");
 
 const when = (date, tz) =>
   new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" }).format(date);
 
 function layout(title, bodyHtml) {
-  return `<!doctype html><html><body style="margin:0;background:#f4f1ff;font-family:Inter,Segoe UI,Arial,sans-serif;color:#15121f">
+  return `<!doctype html><html><body style="margin:0;background:#f2f2f4;font-family:Inter,Segoe UI,Arial,sans-serif;color:#111216">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:28px 12px">
 <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;padding:28px">
 <tr><td>
 <p style="margin:0 0 4px;font:600 12px/1.4 monospace;letter-spacing:.12em;text-transform:uppercase;color:#5b3df5">Aakash Remesh · Accounting Systems</p>
 <h1 style="margin:0 0 16px;font:600 24px/1.25 Georgia,serif">${escapeHtml(title)}</h1>
 ${bodyHtml}
-<p style="margin:24px 0 0;color:#625c7a;font-size:13px">aakashremesh.com</p>
+<p style="margin:24px 0 0;color:#5d616b;font-size:13px">aakashremesh.com</p>
 </td></tr></table></td></tr></table></body></html>`;
 }
 
-const row = (k, v) => `<tr><td style="padding:6px 12px 6px 0;color:#625c7a;vertical-align:top;white-space:nowrap">${escapeHtml(k)}</td><td style="padding:6px 0">${escapeHtml(v)}</td></tr>`;
+const row = (k, v) => `<tr><td style="padding:6px 12px 6px 0;color:#5d616b;vertical-align:top;white-space:nowrap">${escapeHtml(k)}</td><td style="padding:6px 0">${escapeHtml(v)}</td></tr>`;
 const table = (rows) => `<table role="presentation" cellpadding="0" cellspacing="0" style="font-size:15px;line-height:1.5">${rows.join("")}</table>`;
 
 export function bookingIcs(b) {
@@ -63,7 +66,7 @@ export function bookingIcs(b) {
       (joinUrl(b) ? `Join: ${joinUrl(b)}\n` : "A video link will follow by email.\n") +
       `Booked by ${b.fullName} (${b.email}), ${b.company}.` +
       (b.notes ? `\nNotes: ${b.notes}` : ""),
-    location: b.meetingUrl ? "Microsoft Teams meeting" : (BOOKING.meetingUrl || "Video call"),
+    location: providerOf(b) ? `${providerOf(b)} meeting` : (joinUrl(b) || "Video call"),
     url: joinUrl(b) || undefined,
     organizer: { name: MAIL.ownerName, email: fromAddress().address },
     attendees: [{ name: b.fullName, email: b.email }, { name: MAIL.ownerName, email: MAIL.owner }],
@@ -79,7 +82,7 @@ export async function sendBookingToOwner(b) {
     row("Name", b.fullName), row("Email", b.email), row("Company", b.company),
   ];
   if (b.notes) rows.push(row("Notes", b.notes));
-  if (joinUrl(b)) rows.push(row(b.meetingUrl ? "Teams link" : "Video link", joinUrl(b)));
+  if (joinUrl(b)) rows.push(row(providerOf(b) ? `${providerOf(b)} link` : "Video link", joinUrl(b)));
   const t = await transport();
   return t.sendMail({
     from: fromAddress(),
@@ -96,7 +99,7 @@ export async function sendBookingToOwner(b) {
 export async function sendBookingConfirmation(b) {
   const start = new Date(b.start);
   const link = joinUrl(b)
-    ? `<p style="margin:16px 0"><a href="${escapeHtml(joinUrl(b))}" style="display:inline-block;background:#15121f;color:#fbfaff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">${b.meetingUrl ? "Join the Teams Meeting" : "Join the Video Call"}</a></p>`
+    ? `<p style="margin:16px 0"><a href="${escapeHtml(joinUrl(b))}" style="display:inline-block;background:#111216;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">${providerOf(b) === "Google Meet" ? "Join the Google Meet" : providerOf(b) === "Microsoft Teams" ? "Join the Teams Meeting" : "Join the Video Call"}</a></p>`
     : `<p style="margin:16px 0">I'll send the video link before the call.</p>`;
   const t = await transport();
   return t.sendMail({
@@ -124,6 +127,6 @@ export async function sendMessageToOwner(m) {
     subject: `Website message from ${m.fullName}${m.company ? ` (${m.company})` : ""}`,
     text: `Name: ${m.fullName}\nEmail: ${m.email}\n${m.company ? `Company: ${m.company}\n` : ""}\n${m.message}\n\nReply to this email to answer.`,
     html: layout("New Message", table(rows) +
-      `<div style="margin:16px 0 0;padding:14px 16px;background:#f4f1ff;border-radius:12px;white-space:pre-wrap;font-size:15px;line-height:1.55">${escapeHtml(m.message)}</div>`),
+      `<div style="margin:16px 0 0;padding:14px 16px;background:#f2f2f4;border-radius:12px;white-space:pre-wrap;font-size:15px;line-height:1.55">${escapeHtml(m.message)}</div>`),
   });
 }

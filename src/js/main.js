@@ -157,7 +157,7 @@ if (!reduceMotion) {
 
   if (finePointer) {
     /* ---------- Cards lift and tilt toward the pointer ---------- */
-    $$(".card, .services-more li, .platform").forEach((card) => {
+    $$(".card, .services-more li, .platform, .model, .quote").forEach((card) => {
       card.addEventListener("pointermove", (e) => {
         const r = card.getBoundingClientRect();
         const x = (e.clientX - r.left) / r.width - 0.5;

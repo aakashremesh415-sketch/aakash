@@ -18,6 +18,8 @@ UPWORK = "https://www.upwork.com/freelancers/~01dfe8e2fc663ed9ec"
 LINKEDIN = "https://www.linkedin.com/in/aakashremesh/"
 
 faq = json.loads((SRC / "faq.json").read_text())
+# Client reviews, copied word for word from Upwork (see README → "Adding a testimonial").
+testimonials = json.loads((SRC / "testimonials.json").read_text())
 
 SERVICES = [
     ("Accounting System Setup", "Chart of Accounts, opening balances, bank feeds and integrations configured from scratch in QuickBooks Online, Zoho Books, Xero, Sage Intacct or NetSuite."),
@@ -149,10 +151,28 @@ faq_html = "\n".join(
     for f in faq
 )
 
+
+
+def testimonial_card(t):
+    stars = max(0, min(5, round(float(t.get("rating", 5)))))
+    meta = " · ".join(html.escape(x) for x in (t.get("project"), t.get("date")) if x)
+    return f"""          <figure class="quote" data-reveal>
+            <p class="quote__stars" aria-label="{stars} out of 5 stars">{"★" * stars}</p>
+            <blockquote><p>{html.escape(t["quote"])}</p></blockquote>
+            <figcaption><strong>{html.escape(t["name"])}</strong>{f'<span>{meta}</span>' if meta else ''}<span class="quote__src mono">Verified Upwork review</span></figcaption>
+          </figure>"""
+
+
+testimonials_html = (
+    '        <div class="quotes">\n' + "\n".join(testimonial_card(t) for t in testimonials) + "\n        </div>"
+    if testimonials else ""
+)
+
 page = (SRC / "index.html").read_text()
 for key, value in {
     "{{JSONLD}}": json.dumps(graph, indent=2, ensure_ascii=False).replace("</", "<\\/"),
     "{{FAQ}}": faq_html,
+    "{{TESTIMONIALS}}": testimonials_html,
     "{{SEAL}}": (SRC / "seal.svg").read_text().strip(),
     "{{CONTACT}}": (SRC / "contact.html").read_text().rstrip(),
 }.items():

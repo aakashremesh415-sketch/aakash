@@ -5,6 +5,7 @@ import { isOfferedSlot, slotEnd } from "./_lib/slots.js";
 import { busyBetween, release, reserve, upcomingCountForEmail } from "./_lib/store.js";
 import { sendBookingConfirmation, sendBookingToOwner } from "./_lib/mail.js";
 import { createTeamsMeeting, deleteTeamsMeeting, teamsConfigured } from "./_lib/teams.js";
+import { createMeetMeeting, deleteMeetMeeting, meetConfigured } from "./_lib/meet.js";
 import { EMAIL_RE, clean, cleanText, clientIp, json, limited, looksLikeBot, readJson, sameOrigin, validTz } from "./_lib/http.js";
 
 async function handler(req) {
@@ -49,16 +50,20 @@ async function handler(req) {
       return json(409, { ok: false, error: "Someone just took that slot. Please pick another time." });
     }
 
-    // A unique Teams meeting for this call, when Microsoft 365 is connected.
-    // If Teams can't be reached the booking still goes ahead with MEETING_URL (or "link to follow").
+    // A unique meeting for this call: Google Meet when connected, else Teams (Microsoft 365).
+    // If the provider can't be reached the booking still goes ahead with MEETING_URL (or "link to follow").
+    const provider = meetConfigured()
+      ? { name: "Google Meet", create: createMeetMeeting, remove: deleteMeetMeeting }
+      : teamsConfigured() ? { name: "Microsoft Teams", create: createTeamsMeeting, remove: deleteTeamsMeeting } : null;
     let eventId = null;
-    if (teamsConfigured()) {
+    if (provider) {
       try {
-        const meeting = await createTeamsMeeting(booking);
+        const meeting = await provider.create(booking);
         booking.meetingUrl = meeting.joinUrl;
+        booking.meetingProvider = provider.name;
         eventId = meeting.eventId;
       } catch (err) {
-        console.error("[book] Teams meeting creation failed; using the fallback link", err);
+        console.error(`[book] ${provider.name} meeting creation failed; using the fallback link`, err);
       }
     }
 
@@ -68,7 +73,7 @@ async function handler(req) {
     } catch (err) {
       console.error("[book] owner email failed", err);
       await release(booking).catch(() => {});
-      await deleteTeamsMeeting(eventId).catch(() => {});
+      if (eventId) await provider.remove(eventId).catch(() => {});
       return json(502, { ok: false, error: "Your booking couldn't be completed. Please try again, or send a message instead." });
     }
     try {
