@@ -1,135 +1,9 @@
-(() => {
-  "use strict";
+// Lightbox, contact tabs, booking calendar and message form.
+// (Moved unchanged from the previous script.js, wrapped as a module.)
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
-  // Refuse to render inside another site's frame (clickjacking).
-  if (window.top !== window.self) {
-    document.documentElement.style.display = "none";
-    try { window.top.location.replace(window.self.location.href); } catch (_) { /* cross-origin */ }
-    return;
-  }
-
-  const $ = (sel, root = document) => root.querySelector(sel);
-  const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-
-  const year = $("#year");
-  if (year) year.textContent = String(new Date().getFullYear());
-
-  // Assemble the email address at runtime so it isn't sitting in the HTML for scrapers.
-  $$(".js-email").forEach((a) => {
-    a.href = `mailto:${a.dataset.u}@${a.dataset.d}`;
-  });
-
-  /* ---------- Portrait follows the cursor ----------
-     The face turns continuously toward the pointer (3D tilt + parallax, spring-smoothed),
-     and the closest of five painted poses (center/up/down/left/right) crossfades in.
-     Touch devices get a slow idle sway instead; reduced-motion users get a still image. */
-  const portrait = $("#portrait");
-  if (portrait && !reduceMotion) {
-    const frame = $(".portrait__frame", portrait);
-    const face = $(".portrait__face", portrait);
-    const imgs = { center: $(".portrait__img", portrait) };
-    const target = { x: 0, y: 0 };
-    const cur = { x: 0, y: 0 };
-    let pose = "center";
-    let running = false;
-
-    const showPose = (look) => {
-      if (look === pose || !imgs[look]) return;
-      imgs[pose].classList.remove("is-active");
-      imgs[look].classList.add("is-active");
-      pose = look;
-    };
-
-    // Pick a pose from the smoothed direction, with hysteresis so it doesn't flicker at boundaries.
-    const choosePose = () => {
-      const mag = Math.hypot(cur.x, cur.y);
-      if (pose === "center" ? mag < 0.3 : mag < 0.2) return showPose("center");
-      if (Math.abs(cur.x) > Math.abs(cur.y) * 0.85) return showPose(cur.x > 0 ? "right" : "left");
-      showPose(cur.y < 0 ? "up" : "down");
-    };
-
-    const render = () => {
-      face.style.transform =
-        `translate3d(${(cur.x * 16).toFixed(2)}px, ${(cur.y * 12).toFixed(2)}px, 0) ` +
-        `rotateY(${(cur.x * 10).toFixed(2)}deg) rotateX(${(-cur.y * 8).toFixed(2)}deg) scale(1.08)`;
-      frame.style.setProperty("--gx", `${(50 + cur.x * 35).toFixed(1)}%`);
-      frame.style.setProperty("--gy", `${(35 + cur.y * 30).toFixed(1)}%`);
-    };
-
-    const tick = () => {
-      cur.x += (target.x - cur.x) * 0.09;
-      cur.y += (target.y - cur.y) * 0.09;
-      render();
-      if (canHover) choosePose();
-      if (Math.abs(target.x - cur.x) + Math.abs(target.y - cur.y) > 0.001) requestAnimationFrame(tick);
-      else running = false;
-    };
-    const kick = () => { if (!running) { running = true; requestAnimationFrame(tick); } };
-
-    if (canHover) {
-      // Load the other poses once the page has settled; they're only needed on mouse devices.
-      const loadPoses = () => {
-        for (const look of ["up", "right", "down", "left"]) {
-          const img = new Image(1200, 1200);
-          img.className = "portrait__img";
-          img.alt = "";
-          img.setAttribute("aria-hidden", "true");
-          img.decoding = "async";
-          img.src = `/assets/img/hero-${look}.webp`;
-          face.appendChild(img);
-          imgs[look] = img;
-        }
-      };
-      if (document.readyState === "complete") loadPoses(); else window.addEventListener("load", loadPoses, { once: true });
-
-      window.addEventListener("pointermove", (e) => {
-        const r = face.getBoundingClientRect();
-        const dx = e.clientX - (r.left + r.width / 2);
-        const dy = e.clientY - (r.top + r.height * 0.4);
-        // Normalise against the viewport so the face keeps following across the whole page.
-        target.x = Math.max(-1, Math.min(1, dx / (window.innerWidth * 0.45)));
-        target.y = Math.max(-1, Math.min(1, dy / (window.innerHeight * 0.55)));
-        kick();
-      }, { passive: true });
-      document.documentElement.addEventListener("pointerleave", () => { target.x = 0; target.y = 0; kick(); });
-    } else {
-      // Touch: a slow, gentle sway while the portrait is on screen.
-      let t0 = performance.now();
-      let visible = true;
-      const sway = (now) => {
-        if (!visible) return;
-        const t = (now - t0) / 1000;
-        cur.x = Math.sin(t * 0.55) * 0.35;
-        cur.y = Math.sin(t * 0.37 + 1) * 0.2;
-        render();
-        requestAnimationFrame(sway);
-      };
-      if ("IntersectionObserver" in window) {
-        new IntersectionObserver(([en]) => {
-          const was = visible;
-          visible = en.isIntersecting;
-          if (visible && !was) { t0 = performance.now() - 0; requestAnimationFrame(sway); }
-        }).observe(portrait);
-      }
-      requestAnimationFrame(sway);
-    }
-  }
-
-  /* ---------- Fade sections in as they scroll into view ---------- */
-  if (!reduceMotion && "IntersectionObserver" in window) {
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-visible");
-          io.unobserve(entry.target);
-        }
-      });
-    }, { rootMargin: "0px 0px -10% 0px" });
-    $$(".section .wrap").forEach((el) => { el.classList.add("reveal"); io.observe(el); });
-  }
-
+export function initApp({ onTabChange } = {}) {
   /* ---------- Certificate lightbox ---------- */
   const box = $("#lightbox");
   if (box && typeof box.showModal === "function") {
@@ -182,6 +56,7 @@
       $(`#${t.getAttribute("aria-controls")}`).hidden = !on;
     });
     if (focus) tab.focus();
+    if (onTabChange) onTabChange(tab);
   };
   tabs.forEach((tab, i) => {
     tab.addEventListener("click", () => selectTab(tab));
@@ -428,4 +303,4 @@
   document.addEventListener("input", (e) => {
     if (e.target.matches && e.target.matches('[aria-invalid="true"]')) e.target.setAttribute("aria-invalid", "false");
   });
-})();
+}

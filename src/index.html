@@ -32,13 +32,13 @@
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <meta name="theme-color" content="#fbfaff" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#110e1b" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f5f5f6" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f1012" media="(prefers-color-scheme: dark)">
 
   <link rel="preload" href="/assets/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/fraunces-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/styles.css">
-  <link rel="preload" as="image" href="/assets/img/hero-center.webp" fetchpriority="high">
+  <link rel="preload" as="image" href="/assets/img/portrait.webp" fetchpriority="high">
   <link rel="alternate" type="text/markdown" href="/llms.txt" title="Summary for AI assistants">
 
   <script type="application/ld+json">
@@ -46,6 +46,7 @@
   </script>
 </head>
 <body>
+  <div class="progress" aria-hidden="true"></div>
   <a class="skip" href="#main">Skip to content</a>
 
   <header class="nav">
@@ -74,20 +75,20 @@
     <section class="hero" aria-labelledby="hero-title">
       <div class="wrap hero__inner">
         <div class="hero__copy">
-          <p class="eyebrow">Bookkeeping &amp; Accounting Systems Consultant</p>
-          <h1 id="hero-title">Hi, I'm Aakash.<span class="accent">I Fix the Books That Don't Add Up.</span></h1>
-          <p class="lead">
+          <p class="eyebrow" data-reveal>Bookkeeping &amp; Accounting Systems Consultant</p>
+          <h1 id="hero-title" data-reveal>Hi, I'm Aakash.<span class="accent">I Fix the Books That Don't Add Up.</span></h1>
+          <p class="lead" data-reveal>
             Inventory that doesn't match. Payouts that won't reconcile. Multi-entity books that turn
             into a mess every month-end. I set up, clean up and migrate accounting systems so owners
             and finance leads get numbers they can trust.
           </p>
-          <div class="hero__cta">
-            <a class="btn" href="#contact">Book a Free 20-Minute Call</a>
+          <div class="hero__cta" data-reveal>
+            <a class="btn btn--magnetic" href="#contact">Book a Free 20-Minute Call</a>
             <a class="btn btn--ghost" href="https://www.upwork.com/freelancers/~01dfe8e2fc663ed9ec" target="_blank" rel="noopener noreferrer me">Hire Me on Upwork <span aria-hidden="true">↗</span><span class="sr-only">(opens in a new tab)</span></a>
           </div>
-          <dl class="stats">
-            <div><dt>9+</dt><dd>Years in Finance Operations</dd></div>
-            <div><dt>6</dt><dd>Accounting Platforms</dd></div>
+          <dl class="stats" data-reveal>
+            <div><dt><span data-count="9" data-suffix="+">9+</span></dt><dd>Years in Finance Operations</dd></div>
+            <div><dt><span data-count="6">6</span></dt><dd>Accounting Platforms</dd></div>
             <div><dt>US · IN · NZ · EU</dt><dd>Client Markets</dd></div>
           </dl>
         </div>
@@ -95,7 +96,7 @@
         <figure class="portrait" id="portrait">
           <div class="portrait__frame">
             <div class="portrait__face">
-              <img class="portrait__img is-active" data-look="center" src="/assets/img/hero-center.webp" width="1200" height="1200" fetchpriority="high" alt="Illustrated portrait of Aakash Remesh smiling, wearing glasses and a grey-and-black raglan tee">
+              <img class="portrait__img" src="/assets/img/portrait.webp" width="1200" height="1200" fetchpriority="high" alt="Illustrated portrait of Aakash Remesh smiling, wearing glasses and a grey-and-black raglan tee">
             </div>
             <div class="portrait__glow" aria-hidden="true"></div>
           </div>
@@ -107,10 +108,10 @@
     <section class="section" id="about" aria-labelledby="about-title">
       <div class="wrap grid-2">
         <div>
-          <p class="eyebrow">About</p>
-          <h2 id="about-title">Set Up Properly. Migrated Cleanly. Documented So It Sticks.</h2>
+          <p class="eyebrow" data-reveal>About</p>
+          <h2 id="about-title" data-reveal>Set Up Properly. Migrated Cleanly. Documented So It Sticks.</h2>
         </div>
-        <div class="prose">
+        <div class="prose" data-reveal>
           <p>
             I'm Aakash Remesh, a bookkeeping and accounting systems consultant with 9+ years of
             full-cycle finance operations for eCommerce brands, SaaS companies, manufacturers and
@@ -132,29 +133,29 @@
 
     <section class="section section--tint" id="services" aria-labelledby="services-title">
       <div class="wrap">
-        <p class="eyebrow">What I Do</p>
-        <h2 id="services-title">Where I Can Help</h2>
+        <p class="eyebrow" data-reveal>What I Do</p>
+        <h2 id="services-title" data-reveal>Where I Can Help</h2>
         <div class="cards">
-          <article class="card">
+          <article class="card" data-reveal>
             <span class="card__num mono" aria-hidden="true">01</span>
             <h3>Setups from Scratch</h3>
             <p>Chart of Accounts, opening balances, integrations and bank feeds, configured right the first time.</p>
             <p class="card__outcome">A month-end that doesn't fight you</p>
           </article>
-          <article class="card">
+          <article class="card" data-reveal>
             <span class="card__num mono" aria-hidden="true">02</span>
             <h3>Platform Migrations</h3>
             <p>QuickBooks Desktop, Xero and spreadsheets to cloud ERPs, end to end, with opening balances validated and history reconciled.</p>
             <p class="card__outcome">Nothing lost on the way over</p>
           </article>
-          <article class="card">
+          <article class="card" data-reveal>
             <span class="card__num mono" aria-hidden="true">03</span>
             <h3>eCommerce Reconciliation</h3>
             <p>Shopify Payments, Amazon, PayPal and Stripe payouts reconciled through A2X and MyWorks.</p>
             <p class="card__outcome">Fees, refunds and reserves where they belong</p>
           </article>
         </div>
-        <ul class="services-more">
+        <ul class="services-more" data-reveal>
           <li>
             <h3>Multi-Entity &amp; Intercompany</h3>
             <p>Due-to/due-from accounts, eliminations and consolidated reporting for groups with several subsidiaries.</p>
@@ -173,9 +174,9 @@
 
     <section class="section" id="platforms" aria-labelledby="platforms-title">
       <div class="wrap">
-        <p class="eyebrow">Platforms &amp; Tools</p>
-        <h2 id="platforms-title">The Stack I Work In</h2>
-        <ul class="platforms">
+        <p class="eyebrow" data-reveal>Platforms &amp; Tools</p>
+        <h2 id="platforms-title" data-reveal>The Stack I Work In</h2>
+        <ul class="platforms" data-reveal>
           <li class="platform">
             <h3>QuickBooks Online</h3>
             <p>Level 2 certified. Full setups, inventory, Shopify/A2X integrations, Desktop migrations.</p>
@@ -202,13 +203,13 @@
           </li>
         </ul>
         <h3 class="chips-label mono">Integrations &amp; Reporting</h3>
-        <ul class="chips">
+        <ul class="chips" data-reveal>
           <li>A2X</li><li>MyWorks</li><li>Shopify</li><li>Amazon</li><li>Stripe</li><li>PayPal</li>
           <li>Bill.com</li><li>Dext</li><li>Hubdoc</li><li>Zoho Inventory</li><li>Syft Analytics</li>
           <li>Power BI</li><li>Looker Studio</li><li>Power Query</li><li>Excel Macros</li>
         </ul>
         <h3 class="chips-label mono">Industries</h3>
-        <ul class="chips chips--soft">
+        <ul class="chips chips--soft" data-reveal>
           <li>eCommerce</li><li>SaaS</li><li>Manufacturing</li><li>Wholesale Distribution</li><li>Multi-Entity Groups</li><li>Service Businesses</li>
         </ul>
       </div>
@@ -217,9 +218,9 @@
     <section class="section section--tint" id="experience" aria-labelledby="experience-title">
       <div class="wrap grid-2">
         <div>
-          <p class="eyebrow">Experience</p>
-          <h2 id="experience-title">Nine Years on the Books.</h2>
-          <div class="side-block">
+          <p class="eyebrow" data-reveal>Experience</p>
+          <h2 id="experience-title" data-reveal>Nine Years on the Books.</h2>
+          <div class="side-block" data-reveal>
             <h3>Certifications</h3>
             <ul class="ticks">
               <li>QuickBooks Online Certification, Level 2 <span>Intuit · 2026 (certified since 2024)</span></li>
@@ -231,15 +232,17 @@
               <li>Career Essentials in Data Analysis <span>Microsoft &amp; LinkedIn · 2023</span></li>
             </ul>
           </div>
-          <div class="side-block">
+          <div class="side-block" data-reveal>
             <h3>Education</h3>
             <ul class="ticks">
               <li>MBA, Finance <span>International Institute of Business Studies · 2021</span></li>
               <li>B.Com, Taxation <span>University of Kerala · 2017</span></li>
             </ul>
           </div>
-          <p class="resume-link"><a class="btn btn--ghost" href="/assets/Aakash-Remesh-Resume.pdf" download>Download Résumé <span class="sr-only">(PDF)</span><span aria-hidden="true">· PDF</span></a></p>
+          <p class="resume-link" data-reveal><a class="btn btn--ghost" href="/assets/Aakash-Remesh-Resume.pdf" download>Download Résumé <span class="sr-only">(PDF)</span><span aria-hidden="true">· PDF</span></a></p>
         </div>
+        <div class="timeline-wrap" data-reveal>
+        <span class="timeline__progress" aria-hidden="true"></span>
         <ol class="timeline">
           <li>
             <span class="timeline__when mono">2025 — Present</span>
@@ -278,10 +281,11 @@
             <p>Books closure, reconciliations and financial statement preparation.</p>
           </li>
         </ol>
+        </div>
       </div>
       <div class="wrap certs-block">
         <h3 class="chips-label mono">Credentials on File</h3>
-        <ul class="certs">
+        <ul class="certs" data-reveal>
           <li>
             <button class="cert" type="button" aria-haspopup="dialog" data-title="QuickBooks Online Certification">
               <span class="cert__stack">
@@ -338,10 +342,10 @@
 
     <section class="section" id="projects" aria-labelledby="projects-title">
       <div class="wrap">
-        <p class="eyebrow">Beyond the Books</p>
-        <h2 id="projects-title">I Also Build the Tools.</h2>
-        <p class="lead section-lead">When off-the-shelf software didn't fit how our team works, I built our own. All three tools share one login.</p>
-        <ul class="projects">
+        <p class="eyebrow" data-reveal>Beyond the Books</p>
+        <h2 id="projects-title" data-reveal>I Also Build the Tools.</h2>
+        <p class="lead section-lead" data-reveal>When off-the-shelf software didn't fit how our team works, I built our own. All three tools share one login.</p>
+        <ul class="projects" data-reveal>
           <li class="project">
             <div class="project__head">
               <h3>Takshashila</h3>
@@ -369,9 +373,9 @@
 
     <section class="section section--tint" id="faq" aria-labelledby="faq-title">
       <div class="wrap">
-        <p class="eyebrow">FAQ</p>
-        <h2 id="faq-title">Questions Clients Ask</h2>
-        <div class="faq">
+        <p class="eyebrow" data-reveal>FAQ</p>
+        <h2 id="faq-title" data-reveal>Questions Clients Ask</h2>
+        <div class="faq" data-reveal>
 {{FAQ}}
         </div>
       </div>
@@ -380,10 +384,10 @@
     <section class="section contact" id="contact" aria-labelledby="contact-title">
       <div class="wrap contact__inner">
         <div>
-          <img class="contact__face" src="/assets/img/aakash-up.webp" width="160" height="160" alt="" loading="lazy">
-          <p class="eyebrow">Contact</p>
-          <h2 id="contact-title">Let's Talk.</h2>
-          <p class="lead">Need your books set up properly, your data migrated cleanly, or years of messy accounting untangled? Book a free 20-minute call, or send me a note about what's going on.</p>
+          <img class="contact__face" src="/assets/img/portrait-sm.webp" width="160" height="160" alt="" loading="lazy">
+          <p class="eyebrow" data-reveal>Contact</p>
+          <h2 id="contact-title" data-reveal>Let's Talk.</h2>
+          <p class="lead" data-reveal>Need your books set up properly, your data migrated cleanly, or years of messy accounting untangled? Book a free 20-minute call, or send me a note about what's going on.</p>
           <div class="contact__alt">
             <a class="btn btn--ghost btn--small js-email" href="#contact-form" data-u="aakashremesh415" data-d="gmail.com">Email Me</a>
             <a class="btn btn--ghost btn--small" href="https://www.linkedin.com/in/aakashremesh/" target="_blank" rel="noopener noreferrer me">LinkedIn <span aria-hidden="true">↗</span><span class="sr-only">(opens in a new tab)</span></a>
@@ -392,7 +396,7 @@
           <p class="langs mono">Speaks English · Hindi · Malayalam · Tamil</p>
         </div>
 
-        <div class="panel" id="contact-form">
+        <div class="panel" id="contact-form" data-reveal>
 {{CONTACT}}
         </div>
       </div>
@@ -426,6 +430,6 @@
     </div>
   </dialog>
 
-  <script src="/assets/script.js" defer></script>
+  <script src="/assets/app.js" defer></script>
 </body>
 </html>

@@ -13,6 +13,8 @@ src/faq.json            FAQ: rendered as visible Q&A and as FAQPage structured d
 src/contact.html        booking + message panel markup
 src/seal.svg            inline logo seal used on the portrait
 src/resume.html         source of assets/Aakash-Remesh-Resume.pdf
+src/js/                 page script (Motion animations, WebGL portrait, booking UI)
+tools/bundle.mjs        bundles src/js into assets/app.js (esbuild)
 tools/build.py          builds index.html from src/
 assets/                 styles, script, fonts (self-hosted), images, résumé PDF
 api/                    Vercel functions: /api/slots, /api/book, /api/message
@@ -26,7 +28,7 @@ public/                 build output (generated, not committed)
 ## Editing
 
 1. Edit files in `src/` (copy, sections, FAQ answers).
-2. Run `python3 tools/build.py` to regenerate `index.html`.
+2. Run `npm run build` (bundles the script, regenerates `index.html`).
 3. Commit both.
 
 The FAQ lives only in `src/faq.json`; the build writes it into the page twice (visible and
@@ -53,7 +55,7 @@ it as `assets/Aakash-Remesh-Resume.pdf`. It intentionally has no phone number or
 ## Hosting (Vercel)
 
 The site and the booking/contact functions deploy together on **Vercel**. The build
-(`python3 tools/build.py`) regenerates `index.html` and copies only the public site
+(`npm run build`) regenerates `index.html` and copies only the public site
 into `public/`, which Vercel serves; `src/`, `tools/`, `tests/` and `brand/` are never deployed.
 
 1. Vercel → **Add New → Project** → import this repo. Framework preset **Other**. Build
@@ -154,7 +156,7 @@ clean DMARC reports, tighten DMARC to `p=quarantine`, then `p=reject`.
 ```sh
 npm install
 npm test                         # backend tests
-python3 tools/build.py           # rebuild index.html
+npm run build                    # bundle script + rebuild index.html
 (cd public && python3 -m http.server 8000)   # static preview (booking shows its fallback)
 npx vercel dev                   # full preview including /api (needs the Vercel CLI)
 ```
@@ -196,5 +198,12 @@ brand/concepts/             the other directions that were explored
 brand/tools/build_seal.py   regenerates brand/seal from the Manrope and IBM Plex Mono fonts
 ```
 
-Colours: ink `#15121f`, lavender `#d9ccff`, violet `#5b3df5`, soft violet `#a48cff`.
+Colours: ink `#111216`, paper `#f5f5f6`, portrait grey `#c9cbd1`, violet `#5b3df5`, soft violet `#a48cff`.
 Type: Fraunces (headings), Inter (text), IBM Plex Mono (labels).
+
+## Portrait
+
+`assets/img/portrait.webp` (grey background, made by `brand/tools/grey_background.py`) plus
+`assets/img/portrait-depth.png` (a depth map from `brand/tools/depth_map.py`). The page warps
+the single image with WebGL so the head and eyes follow the cursor in any direction; without
+WebGL, or with reduced motion, the plain image shows.
