@@ -13,7 +13,7 @@ async function handler(req) {
     const until = new Date(now.getTime() + (BOOKING.horizonDays + 1) * 86400_000);
     const busy = await busyBetween(now, until);
     const slots = generateSlots(busy, now).map((d) => d.toISOString());
-    return json(200, { ok: true, durationMin: BOOKING.durationMin, slots });
+    return json(200, { ok: true, durationMin: BOOKING.durationMin, timeZone: BOOKING.displayTimeZone, slots });
   } catch (err) {
     console.error("[slots]", err);
     return json(500, { ok: false, error: "Couldn't load times." });

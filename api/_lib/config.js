@@ -14,15 +14,17 @@ const whole = (k, d) => {
   return v !== "" && Number.isInteger(n) && n >= 0 ? n : d;
 };
 
-// "10:00-13:00,18:30-22:00" -> [[600, 780], [1110, 1320]] (minutes after midnight)
+// "10:00-13:00,18:30-22:00" -> [[600, 780], [1110, 1320]] (minutes after midnight).
+// A window may run past midnight: "17:00-01:00" -> [[1020, 1500]]. It belongs to the day it starts on.
 function parseWindows(spec) {
   return spec.split(",").map((w) => w.trim()).filter(Boolean).map((w) => {
     const [a, b] = w.split("-").map((t) => {
       const [h, m = "0"] = t.trim().split(":");
       return Number(h) * 60 + Number(m);
     });
-    if (!(a >= 0 && b > a && b <= 24 * 60)) throw new Error(`Bad BOOKING_WINDOWS entry: ${w}`);
-    return [a, b];
+    const end = b <= a ? b + 24 * 60 : b;
+    if (!(a >= 0 && a < 24 * 60 && b >= 0 && b <= 24 * 60 && end - a <= 24 * 60)) throw new Error(`Bad BOOKING_WINDOWS entry: ${w}`);
+    return [a, end];
   });
 }
 
@@ -30,12 +32,14 @@ export const BOOKING = {
   title: "Call with Aakash Remesh",
   durationMin: num("BOOKING_DURATION_MIN", 20),
   bufferMin: num("BOOKING_BUFFER_MIN", 10),
-  // Availability is defined in this time zone; visitors see slots in their own.
+  // Availability is defined in this time zone; the page shows slots in DISPLAY_TZ.
   hostTimeZone: env("BOOKING_TZ", "Asia/Kolkata"),
-  // Mon-Fri by default (0 = Sunday … 6 = Saturday).
+  // Mon-Fri by default (0 = Sunday … 6 = Saturday): the day a window starts on.
   workingDays: env("BOOKING_DAYS", "1,2,3,4,5").split(",").map(Number),
-  // Default windows overlap New Zealand/Europe (morning IST) and the US (evening IST).
-  windows: parseWindows(env("BOOKING_WINDOWS", "10:00-13:00,18:30-22:00")),
+  // 5 PM to 1 AM IST = US Eastern morning to mid-afternoon.
+  windows: parseWindows(env("BOOKING_WINDOWS", "17:00-01:00")),
+  // Time zone the booking calendar and emails show times in (besides the visitor's own).
+  displayTimeZone: env("BOOKING_DISPLAY_TZ", "America/New_York"),
   // Earliest bookable day = today + leadDays (in hostTimeZone). 2 = book today, meet in two days at the earliest.
   leadDays: whole("BOOKING_LEAD_DAYS", 2),
   minNoticeHours: num("BOOKING_MIN_NOTICE_HOURS", 1),

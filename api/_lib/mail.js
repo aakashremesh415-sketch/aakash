@@ -78,6 +78,7 @@ export async function sendBookingToOwner(b) {
   const start = new Date(b.start);
   const rows = [
     row("When (IST)", when(start, BOOKING.hostTimeZone)),
+    row("US Eastern", when(start, BOOKING.displayTimeZone)),
     row("Their time", when(start, b.clientTz)),
     row("Name", b.fullName), row("Email", b.email), row("Company", b.company),
   ];
@@ -89,7 +90,7 @@ export async function sendBookingToOwner(b) {
     to: owner(),
     replyTo: { name: b.fullName, address: b.email },
     subject: `New booking: ${b.fullName} (${b.company}), ${when(start, BOOKING.hostTimeZone)}`,
-    text: `New ${BOOKING.durationMin}-minute call booked.\n\nWhen (IST): ${when(start, BOOKING.hostTimeZone)}\nTheir time: ${when(start, b.clientTz)}\nName: ${b.fullName}\nEmail: ${b.email}\nCompany: ${b.company}\n${b.notes ? `Notes: ${b.notes}\n` : ""}${joinUrl(b) ? `Join: ${joinUrl(b)}\n` : ""}\nReply to this email to reach them.`,
+    text: `New ${BOOKING.durationMin}-minute call booked.\n\nWhen (IST): ${when(start, BOOKING.hostTimeZone)}\nUS Eastern: ${when(start, BOOKING.displayTimeZone)}\nTheir time: ${when(start, b.clientTz)}\nName: ${b.fullName}\nEmail: ${b.email}\nCompany: ${b.company}\n${b.notes ? `Notes: ${b.notes}\n` : ""}${joinUrl(b) ? `Join: ${joinUrl(b)}\n` : ""}\nReply to this email to reach them.`,
     html: layout("New Booking", table(rows) + `<p style="margin:16px 0 0">Reply to this email to reach ${escapeHtml(b.fullName)}.</p>`),
     icalEvent: { method: "REQUEST", filename: "invite.ics", content: bookingIcs(b) },
   });
@@ -98,6 +99,9 @@ export async function sendBookingToOwner(b) {
 /** Confirmation + calendar invite to the visitor. */
 export async function sendBookingConfirmation(b) {
   const start = new Date(b.start);
+  // The calendar on the site showed US Eastern Time; repeat it when the visitor is elsewhere.
+  const sameAsShown = when(start, b.clientTz) === when(start, BOOKING.displayTimeZone);
+  const shown = sameAsShown ? "" : when(start, BOOKING.displayTimeZone);
   const link = joinUrl(b)
     ? `<p style="margin:16px 0"><a href="${escapeHtml(joinUrl(b))}" style="display:inline-block;background:#111216;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">${providerOf(b) === "Google Meet" ? "Join the Google Meet" : providerOf(b) === "Microsoft Teams" ? "Join the Teams Meeting" : "Join the Video Call"}</a></p>`
     : `<p style="margin:16px 0">I'll send the video link before the call.</p>`;
@@ -107,9 +111,9 @@ export async function sendBookingConfirmation(b) {
     to: { name: b.fullName, address: b.email },
     replyTo: owner(),
     subject: `Confirmed: ${BOOKING.durationMin}-minute call with Aakash Remesh, ${when(start, b.clientTz)}`,
-    text: `Hi ${b.fullName},\n\nThanks for booking a ${BOOKING.durationMin}-minute call.\n\nWhen: ${when(start, b.clientTz)}\n${joinUrl(b) ? `Join: ${joinUrl(b)}\n` : "I'll send the video link before the call.\n"}\nThe calendar invite is attached. Need a different time? Just reply to this email.\n\nAakash Remesh\nhttps://aakashremesh.com`,
+    text: `Hi ${b.fullName},\n\nThanks for booking a ${BOOKING.durationMin}-minute call.\n\nWhen: ${when(start, b.clientTz)}\n${shown ? `US Eastern: ${shown}\n` : ""}${joinUrl(b) ? `Join: ${joinUrl(b)}\n` : "I'll send the video link before the call.\n"}\nThe calendar invite is attached. Need a different time? Just reply to this email.\n\nAakash Remesh\nhttps://aakashremesh.com`,
     html: layout("Your Call Is Booked", `<p style="margin:0 0 12px">Hi ${escapeHtml(b.fullName)}, thanks for booking a ${BOOKING.durationMin}-minute call.</p>` +
-      table([row("When", when(start, b.clientTz)), row("With", "Aakash Remesh")]) + link +
+      table([row("When", when(start, b.clientTz)), ...(shown ? [row("US Eastern", shown)] : []), row("With", "Aakash Remesh")]) + link +
       `<p style="margin:0">The calendar invite is attached. Need a different time? Just reply to this email.</p>`),
     icalEvent: { method: "REQUEST", filename: "invite.ics", content: bookingIcs(b) },
   });

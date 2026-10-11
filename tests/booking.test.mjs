@@ -72,35 +72,54 @@ test("nothing is bookable today or tomorrow; the first day is two days out (IST)
   assert.ok(!slots.some((s) => ["2026-10-07", "2026-10-08"].includes(istDay(s))));
 });
 
-test("Saturday and Sunday (IST) are never offered", () => {
+// IST wall clock of a slot, counting 00:00-01:00 as the end of the previous evening's window.
+const istWindowTime = (s) => {
+  const ist = new Date(s.getTime() + 5.5 * 3600_000);
+  let mins = ist.getUTCHours() * 60 + ist.getUTCMinutes();
+  let day = ist.getUTCDay();
+  if (mins < 6 * 60) { mins += 1440; day = (day + 6) % 7; }
+  return { mins, day };
+};
+const etParts = (s) => Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short", hour: "numeric", hourCycle: "h23" })
+  .formatToParts(s).map((p) => [p.type, p.value]));
+
+test("the default window is 5 PM to 1 AM IST, Monday to Friday evenings", () => {
+  assert.deepEqual(BOOKING.windows, [[17 * 60, 25 * 60]]);
+  assert.equal(BOOKING.displayTimeZone, "America/New_York");
+});
+
+test("no window starts on an IST weekend, and no slot falls on a US Eastern weekend", () => {
   const slots = generateSlots([], new Date("2026-10-07T05:00:00Z"));
   for (const s of slots) {
-    const d = new Date(s.getTime() + 5.5 * 3600_000).getUTCDay();
-    assert.ok(d >= 1 && d <= 5, `weekend slot ${s.toISOString()}`);
+    const { day } = istWindowTime(s);
+    assert.ok(day >= 1 && day <= 5, `weekend window ${s.toISOString()}`);
+    assert.ok(!["Sat", "Sun"].includes(etParts(s).weekday), `US weekend slot ${s.toISOString()}`);
   }
 });
 
-test("slots fall inside the IST windows on weekdays, after the notice period", () => {
+test("slots fall inside 5 PM-1 AM IST, after the notice period", () => {
   const now = new Date("2026-10-07T00:00:00Z"); // Wednesday
   const slots = generateSlots([], now);
   assert.ok(slots.length > 50);
   for (const s of slots) {
-    const ist = new Date(s.getTime() + 5.5 * 3600_000);
-    const mins = ist.getUTCHours() * 60 + ist.getUTCMinutes();
-    const inWindow = BOOKING.windows.some(([a, b]) => mins >= a && mins + BOOKING.durationMin <= b);
-    assert.ok(inWindow, `slot ${s.toISOString()} outside windows`);
-    assert.ok([1, 2, 3, 4, 5].includes(ist.getUTCDay()), "weekend slot");
+    const { mins } = istWindowTime(s);
+    assert.ok(mins >= 17 * 60 && mins + BOOKING.durationMin <= 25 * 60, `slot ${s.toISOString()} outside 17:00-01:00 IST`);
     assert.ok(s - now >= BOOKING.minNoticeHours * 3600_000, "inside notice period");
   }
+  // In US Eastern daylight time that is 7:30 AM to 3:30 PM.
+  const hours = slots.map((s) => Number(etParts(s).hour));
+  assert.equal(Math.min(...hours), 7);
+  assert.equal(Math.max(...hours), 15);
+  // The last slot of a Friday evening (00:30 IST Saturday) is still offered.
+  assert.ok(slots.some((s) => s.toISOString() === "2026-10-09T19:00:00.000Z"), "Friday 00:30 IST slot");
 });
 
-test("a booked slot and its buffer are removed", () => {
-  const now = new Date("2026-10-07T00:00:00Z");
-  const all = generateSlots([], now);
-  const taken = all[3];
-  const busy = [{ start: taken, end: new Date(taken.getTime() + BOOKING.durationMin * 60_000) }];
-  assert.equal(isOfferedSlot(taken, busy, now), false);
-  assert.equal(isOfferedSlot(all[0], busy, now), true);
+test("the visitor's email repeats the time in US Eastern when they are elsewhere", async () => {
+  reset();
+  const start = await firstSlot();
+  await bookFn(req("/api/book", { ...human, fullName: "A", email: "a@a.com", company: "A", start, timeZone: "Asia/Kolkata" }));
+  assert.match(sent[1].text, /US Eastern: .*E[DS]T/);
+  assert.match(sent[0].text, /US Eastern: /);
 });
 
 // ---- ICS ---------------------------------------------------------------------

@@ -98,11 +98,13 @@ into `public/`, which Vercel serves; `src/`, `tools/`, `tests/` and `brand/` are
    | `MEETING_URL` | `https://meet.google.com/abc-defg-hij` | Fixed video link: used when per-call links aren't set up, or as the backup if Google can't be reached |
 
    Optional booking settings (defaults in brackets):
-   `BOOKING_TZ` [`Asia/Kolkata`], `BOOKING_WINDOWS` [`10:00-13:00,18:30-22:00`],
-   `BOOKING_DAYS` [`1,2,3,4,5` = Mon–Fri], `BOOKING_LEAD_DAYS` [`2` = earliest call is two
-   days after booking], `BOOKING_DURATION_MIN` [`20`], `BOOKING_BUFFER_MIN` [`10`],
-   `BOOKING_HORIZON_DAYS` [`21`]. Visitors only see slots between 7 AM and 9 PM in their own
-   time zone, and never on their own Saturday or Sunday.
+   `BOOKING_TZ` [`Asia/Kolkata`], `BOOKING_WINDOWS` [`17:00-01:00` = 5 PM to 1 AM IST; a
+   window may cross midnight and belongs to the day it starts], `BOOKING_DAYS` [`1,2,3,4,5` =
+   Monday to Friday evenings], `BOOKING_DISPLAY_TZ` [`America/New_York` = the calendar shows
+   US Eastern Time], `BOOKING_LEAD_DAYS` [`2` = earliest call is two days after booking],
+   `BOOKING_DURATION_MIN` [`20`], `BOOKING_BUFFER_MIN` [`10`], `BOOKING_HORIZON_DAYS` [`21`].
+   5 PM to 1 AM IST is 7:30 AM to 3:30 PM Eastern in US summer time and 6:30 AM to 2:30 PM in
+   winter. Visitors' confirmation emails show their own time plus US Eastern.
 4. Redeploy (environment variables apply to new deployments).
 5. **Settings → Domains** → add `aakashremesh.com` and `www.aakashremesh.com`, then set the
    DNS records Vercel shows at your registrar.
@@ -209,7 +211,7 @@ clean DMARC reports, tighten DMARC to `p=quarantine`, then `p=reject`.
 
 ### How booking works
 
-- `/api/slots` lists open 20-minute times; the page shows them in the visitor's time zone,
+- `/api/slots` lists open 20-minute times; the page shows them in US Eastern Time,
   with weekends marked Closed and the next two days marked Not Available.
 - `/api/book` checks the time is still offered, reserves it (a Vercel Blob file per slot;
   Blob refuses to overwrite, so two people can't take the same time), emails you first, then

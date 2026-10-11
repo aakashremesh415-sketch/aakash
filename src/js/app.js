@@ -120,13 +120,24 @@ export function initApp({ onTabChange } = {}) {
   /* ---------- Booking ---------- */
   const panelBook = $("#panel-book");
   if (panelBook) {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-    // "Eastern Daylight Time" reads better than "America/New_York".
-    let tzName = tz.replace(/_/g, " ");
-    try {
-      tzName = new Intl.DateTimeFormat(undefined, { timeZone: tz, timeZoneName: "long" })
-        .formatToParts(new Date()).find((p) => p.type === "timeZoneName").value;
-    } catch (_) { /* keep the IANA name */ }
+    // Times are shown in US Eastern Time (the server can name another zone); the visitor's own
+    // zone is still sent with the booking so their confirmation email uses it too.
+    const visitorTz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    let tz = "America/New_York";
+    let tzName = "US Eastern Time";
+    const setZone = (zone) => {
+      try {
+        new Intl.DateTimeFormat("en-US", { timeZone: zone });
+        tz = zone;
+      } catch (_) { return; }
+      // "Eastern Daylight Time" / "Eastern Standard Time", whichever applies today.
+      try {
+        const long = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "long" })
+          .formatToParts(new Date()).find((p) => p.type === "timeZoneName").value;
+        tzName = tz === "America/New_York" ? `US ${long}` : long;
+      } catch (_) { tzName = tz.replace(/_/g, " "); }
+      $("[data-tz]", panelBook).textContent = tzName;
+    };
     const loading = $("[data-book-loading]", panelBook);
     const picker = $("[data-book-picker]", panelBook);
     const daysEl = $("[data-days]", panelBook);
@@ -134,7 +145,7 @@ export function initApp({ onTabChange } = {}) {
     const form = $("[data-book-form]", panelBook);
     const unavailable = $("[data-book-unavailable]", panelBook);
     const success = $("[data-book-success]", panelBook);
-    $("[data-tz]", panelBook).textContent = tzName;
+    setZone(tz);
 
     const dayKey = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
     const fmt = (d, opts) => new Intl.DateTimeFormat(undefined, { timeZone: tz, ...opts }).format(d);
@@ -167,7 +178,7 @@ export function initApp({ onTabChange } = {}) {
       }
     };
 
-    // Weekday (0 = Sunday) of a date in the visitor's time zone.
+    // Weekday (0 = Sunday) of a date in the displayed time zone.
     const weekdayIn = (d) => ({ Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 })[
       new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short" }).format(d)];
     const isWeekend = (d) => [0, 6].includes(weekdayIn(d));
@@ -215,14 +226,12 @@ export function initApp({ onTabChange } = {}) {
         const res = await fetch("/api/slots", { headers: { Accept: "application/json" } });
         if (!res.ok) throw new Error("slots unavailable");
         const data = await res.json();
+        if (data.timeZone) setZone(data.timeZone);
         byDay = new Map();
         for (const iso of data.slots || []) {
           const d = new Date(iso);
-          // Weekends stay closed in the visitor's calendar too (e.g. Monday morning in India is Sunday evening in California).
+          // No weekend slots in the displayed time zone either.
           if (isWeekend(d)) continue;
-          // Only offer reasonable local hours (7 AM to 9 PM in the visitor's own time zone).
-          const h = Number(new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", hourCycle: "h23" }).format(d));
-          if (h < 7 || h >= 21) continue;
           const k = dayKey(d);
           if (!byDay.has(k)) byDay.set(k, []);
           byDay.get(k).push(d);
@@ -250,7 +259,7 @@ export function initApp({ onTabChange } = {}) {
       busy(form, true);
       setStatus(form, "Booking your call…", "");
       try {
-        const body = await post("/api/book", { ...formData(form), start: chosen.toISOString(), timeZone: tz });
+        const body = await post("/api/book", { ...formData(form), start: chosen.toISOString(), timeZone: visitorTz });
         form.hidden = true;
         $("[data-success-text]", success).textContent = `${longWhen(new Date(body.booking.start))} (${tzName}).`;
         success.hidden = false;
