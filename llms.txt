@@ -24,6 +24,14 @@ reconciliations, reporting) and hourly consulting (reviews, training). NDA on re
 Upwork: Top Rated, 12 jobs, 8 client reviews, repeat clients. Current work includes an
 Intuit Enterprise Suite engagement and a QuickBooks Online to Zoho Books migration.
 
+## Internal Tools Built for Renocrew Solutions
+
+Four in-house apps that share one login:
+- Takshashila (learning platform): courses, quizzes, video lessons, progress tracking.
+- Lekha (tasks and compliance): client deadlines, compliance tasks, live call booking.
+- Niyukti (recruitment): requisition to offer letter, résumé parsing, interview board.
+- Unnati (performance): monthly KPIs and performance reviews.
+
 ## Credentials
 
 - QuickBooks Online Certification, Level 2 (Intuit, 2026; QuickBooks Online certified since 2024)

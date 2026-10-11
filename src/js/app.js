@@ -312,4 +312,28 @@ export function initApp({ onTabChange } = {}) {
   document.addEventListener("input", (e) => {
     if (e.target.matches && e.target.matches('[aria-invalid="true"]')) e.target.setAttribute("aria-invalid", "false");
   });
+
+  /* ---------- Project briefs: hover or focus shows them (CSS); a tap or click pins one open ---------- */
+  const projects = $$(".project");
+  const setOpen = (proj, open) => {
+    proj.classList.toggle("is-open", open);
+    $(".project__name", proj).setAttribute("aria-expanded", String(open));
+  };
+  projects.forEach((proj) => {
+    const name = $(".project__name", proj);
+    if (!name) return;
+    name.addEventListener("click", () => {
+      const open = !proj.classList.contains("is-open");
+      projects.forEach((p) => p !== proj && setOpen(p, false));
+      setOpen(proj, open);
+    });
+  });
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest || !e.target.closest(".project")) projects.forEach((p) => setOpen(p, false));
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    const open = projects.find((p) => p.classList.contains("is-open"));
+    if (open) { setOpen(open, false); $(".project__name", open).focus(); }
+  });
 }

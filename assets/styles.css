@@ -515,3 +515,39 @@ p { margin: 0 0 1rem; }
 .engagements li { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .9rem; padding: .85rem 0; border-bottom: 1px solid var(--line); color: var(--ink-soft); font-size: .96rem; }
 .engagements .tag { font-weight: 600; }
 .feedback__cta { margin: 1.8rem 0 0; }
+
+/* Project briefs: shown on hover, keyboard focus or tap of the project name */
+.project__head { position: relative; }
+.project__name {
+  font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: help; text-align: left;
+  text-decoration: underline dotted var(--line-strong); text-decoration-thickness: 2px; text-underline-offset: 6px;
+  transition: color .15s ease, text-decoration-color .15s ease;
+}
+.project__name:hover, .project.is-open .project__name { color: var(--accent); text-decoration-color: var(--accent); }
+.project__brief {
+  position: absolute; z-index: 20; top: 100%; left: 0;
+  width: min(380px, calc(100vw - 32px));
+  margin-top: .6rem; padding: 1.1rem 1.2rem;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(17, 18, 22, .06), 0 24px 48px -16px rgba(17, 18, 22, .28);
+  font-size: .92rem; line-height: 1.5;
+  opacity: 0; visibility: hidden; transform: translateY(6px) scale(.98); transform-origin: top left;
+  transition: opacity .18s ease, transform .22s cubic-bezier(.2, .9, .3, 1.2), visibility 0s linear .22s;
+}
+/* An invisible bridge, so the pointer can travel from the name into the card without it closing. */
+.project__brief::before { content: ""; position: absolute; left: 0; right: 0; top: -.7rem; height: .7rem; }
+.project.is-open .project__brief,
+.project:has(.project__name:hover) .project__brief,
+.project:has(.project__name:focus-visible) .project__brief,
+.project__brief:hover {
+  opacity: 1; visibility: visible; transform: none;
+  transition: opacity .18s ease, transform .22s cubic-bezier(.2, .9, .3, 1.2), visibility 0s;
+}
+.project__brief p { margin: 0 0 .6rem; color: var(--ink-soft); }
+.project__brief .project__native { font-family: var(--mono); font-size: .8125rem; color: var(--accent); letter-spacing: .02em; }
+.project__native span { font-family: "Noto Sans Devanagari", "Nirmala UI", "Kohinoor Devanagari", sans-serif; font-size: 1rem; letter-spacing: 0; color: var(--ink); }
+.project__brief ul { margin: 0; padding: 0; list-style: none; display: grid; gap: .35rem; }
+.project__brief li { position: relative; padding-left: 1.1rem; color: var(--ink); }
+.project__brief li::before { content: ""; position: absolute; left: 0; top: .55em; width: .4rem; height: .4rem; border-radius: 50%; background: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .project__brief { transition: none; transform: none; } }
