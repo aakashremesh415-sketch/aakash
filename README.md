@@ -296,8 +296,12 @@ brand/concepts/             the other directions that were explored
 brand/tools/build_seal.py   regenerates brand/seal from the Manrope and IBM Plex Mono fonts
 ```
 
-Colours: ink `#111216`, paper `#f5f5f6`, portrait grey `#c9cbd1`, violet `#5b3df5`, soft violet `#a48cff`.
-Type: Fraunces (headings), Inter (text), IBM Plex Mono (labels).
+Colours (Navy & Brass, Nov 2026): navy `#14213d`, paper `#f7f5f0`, brass `#b8892f` (fills only),
+brass text `#7d5c17` (small) / `#9c7222` (large headings), dark-mode brass `#d4a84f`. Dark mode follows the visitor's device.
+Type: Source Serif 4 (headings), Inter (text), IBM Plex Mono (labels).
+Layout: a fixed navy profile panel on wide screens (portrait, tagline, certifications, chapter navigation)
+beside numbered chapters; on phones the panel becomes a header and a sticky "Book a Free Call" bar appears.
+`npm run test:e2e` includes an axe-core WCAG 2.1 AA scan of every page in light and dark mode.
 
 ## Portrait
 

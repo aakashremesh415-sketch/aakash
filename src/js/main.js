@@ -206,3 +206,27 @@ if (!reduceMotion) {
     });
   });
 }
+
+/* ---------- Side navigation: mark the chapter on screen ---------- */
+const sideLinks = $$(".side__nav a");
+if (sideLinks.length && "IntersectionObserver" in window) {
+  const byId = new Map(sideLinks.map((a) => [a.getAttribute("href").slice(1), a]));
+  const visible = new Map();
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((en) => visible.set(en.target.id, en.intersectionRatio));
+    // The chapter with the most of itself on screen wins.
+    let best = null;
+    let ratio = 0;
+    for (const [id, r] of visible) if (r > ratio) { ratio = r; best = id; }
+    sideLinks.forEach((a) => a.removeAttribute("aria-current"));
+    if (best && byId.has(best)) byId.get(best).setAttribute("aria-current", "true");
+  }, { threshold: [0, 0.15, 0.3, 0.5, 0.75, 1] });
+  byId.forEach((_, id) => { const el = document.getElementById(id); if (el) io.observe(el); });
+}
+
+/* ---------- Phone "Book a call" bar: out of the way while booking is on screen ---------- */
+const mbar = $("[data-mbar]");
+const contactSection = $("#contact");
+if (mbar && contactSection && "IntersectionObserver" in window) {
+  new IntersectionObserver(([en]) => mbar.classList.toggle("is-hidden", en.isIntersecting), { threshold: 0.05 }).observe(contactSection);
+}
