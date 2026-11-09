@@ -551,3 +551,53 @@ p { margin: 0 0 1rem; }
 .project__brief li { position: relative; padding-left: 1.1rem; color: var(--ink); }
 .project__brief li::before { content: ""; position: absolute; left: 0; top: .55em; width: .4rem; height: .4rem; border-radius: 50%; background: var(--accent); }
 @media (prefers-reduced-motion: reduce) { .project__brief { transition: none; transform: none; } }
+
+/* Booking: call length + time zone switches, week view, prep questions, add-to-calendar */
+.book-opts { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 1rem; }
+.seg { display: inline-flex; padding: 4px; gap: 4px; border-radius: 14px; background: var(--tint); border: 1px solid var(--line); }
+.seg[hidden] { display: none; }
+.seg button { font: inherit; font-weight: 700; font-size: .92rem; border: 0; border-radius: 10px; padding: .45rem .8rem; background: transparent; color: var(--ink-soft); cursor: pointer; min-height: 44px; text-align: left; line-height: 1.15; }
+.seg button small { display: block; font-weight: 500; font-size: .75rem; color: var(--muted); }
+.seg button[aria-checked="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.seg button:focus-visible, .week__nav:focus-visible, .next-free:focus-visible, .chip input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
+.next-free { display: flex; align-items: center; gap: .4rem; width: 100%; margin: 0 0 1rem; padding: .7rem 1rem; border-radius: 12px; border: 1.5px dashed var(--accent); background: transparent; color: var(--ink); font: inherit; font-size: .95rem; cursor: pointer; text-align: left; }
+.next-free strong { color: var(--accent); }
+.next-free:hover { background: var(--tint); }
+.week { display: grid; grid-template-columns: 40px minmax(0, 1fr) 40px; gap: .5rem; align-items: center; }
+.week .days { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); overflow: visible; padding-bottom: 0; }
+.week .day { min-width: 0; }
+.week__nav { width: 40px; height: 64px; border-radius: 12px; border: 1.5px solid var(--line-strong); background: transparent; color: var(--ink); font-size: 1.6rem; line-height: 1; cursor: pointer; }
+.week__nav:hover:not([disabled]) { border-color: var(--accent); }
+.week__nav[disabled] { opacity: .35; cursor: not-allowed; }
+.prep { border: 0; padding: 0; margin: 0; min-width: 0; }
+.prep legend { font-weight: 600; font-size: .92rem; margin-bottom: .45rem; padding: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.chip { position: relative; cursor: pointer; }
+.chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.chip span { display: inline-block; padding: .4rem .75rem; border-radius: 999px; border: 1.5px solid var(--field-border); font-size: .875rem; font-weight: 600; color: var(--ink-soft); }
+.chip input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.addcal { margin-top: 1.2rem; display: flex; flex-direction: column; align-items: center; gap: .6rem; }
+.addcal__label { font-size: .875rem; color: var(--muted); }
+.addcal__btns { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; }
+.privacy-note a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+@media (max-width: 520px) {
+  .week { grid-template-columns: 32px minmax(0, 1fr) 32px; gap: .3rem; }
+  .week__nav { width: 32px; }
+  .week .days { gap: .3rem; }
+  .week .day { padding: .4rem .1rem; }
+  .seg { width: 100%; } .seg button { flex: 1; }
+}
+
+/* Cancel / reschedule page */
+.manage .lead { max-width: 34rem; }
+.manage__actions { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; margin: .4rem 0 1rem; }
+.manage__note { color: var(--muted); font-size: .875rem; }
+
+/* Privacy page */
+.legal { max-width: 44rem; margin: 0 auto; padding: 3rem 16px 5rem; }
+.legal h1 { font-family: var(--display); font-size: clamp(2rem, 5vw, 2.8rem); line-height: 1.1; margin: .4rem 0 1rem; }
+.legal h2 { font-family: var(--display); font-size: 1.4rem; margin: 2.2rem 0 .6rem; }
+.legal p, .legal li { color: var(--ink-soft); line-height: 1.7; }
+.legal ul { padding-left: 1.2rem; }
+.legal a { color: var(--accent); }
+.legal__updated { margin-top: 2.5rem; font-size: .875rem; color: var(--muted); }

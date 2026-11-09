@@ -65,3 +65,14 @@ export function isOfferedSlot(start, busy, now = new Date(), cfg = BOOKING) {
 export function slotEnd(start, cfg = BOOKING) {
   return new Date(start.getTime() + cfg.durationMin * 60_000);
 }
+
+/**
+ * The 30-minute grid cells a call occupies, as start Dates. A 20-minute call (plus its
+ * 10-minute buffer) fills one cell; a 45-minute call fills two. Each cell is reserved as
+ * its own Blob file, so a long call and a short call can never claim overlapping time.
+ */
+export function cellStarts(start, durationMin, cfg = BOOKING) {
+  const step = (cfg.durationMin + cfg.bufferMin) * 60_000;
+  const n = Math.max(1, Math.ceil(((durationMin + cfg.bufferMin) * 60_000) / step));
+  return Array.from({ length: n }, (_, i) => new Date(start.getTime() + i * step));
+}

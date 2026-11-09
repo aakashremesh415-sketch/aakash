@@ -120,24 +120,21 @@ export function initApp({ onTabChange } = {}) {
   /* ---------- Booking ---------- */
   const panelBook = $("#panel-book");
   if (panelBook) {
-    // Times are shown in US Eastern Time (the server can name another zone); the visitor's own
-    // zone is still sent with the booking so their confirmation email uses it too.
-    const visitorTz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-    let tz = "America/New_York";
-    let tzName = "US Eastern Time";
-    const setZone = (zone) => {
+    // Times show in the visitor's own zone by default, with a one-tap switch to US Eastern.
+    // The visitor's zone is always sent with the booking so the emails use it too.
+    const EASTERN = "America/New_York";
+    let visitorTz = "UTC";
+    try { visitorTz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; } catch (_) { /* old browser */ }
+    const cityOf = (zone) => zone.split("/").pop().replace(/_/g, " ");
+    const zoneLong = (zone) => {
       try {
-        new Intl.DateTimeFormat("en-US", { timeZone: zone });
-        tz = zone;
-      } catch (_) { return; }
-      // "Eastern Daylight Time" / "Eastern Standard Time", whichever applies today.
-      try {
-        const long = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "long" })
+        return new Intl.DateTimeFormat("en-US", { timeZone: zone, timeZoneName: "long" })
           .formatToParts(new Date()).find((p) => p.type === "timeZoneName").value;
-        tzName = tz === "America/New_York" ? `US ${long}` : long;
-      } catch (_) { tzName = tz.replace(/_/g, " "); }
-      $("[data-tz]", panelBook).textContent = tzName;
+      } catch (_) { return cityOf(zone); }
     };
+    let tz = visitorTz;
+    let duration = 20;
+
     const loading = $("[data-book-loading]", panelBook);
     const picker = $("[data-book-picker]", panelBook);
     const daysEl = $("[data-days]", panelBook);
@@ -145,53 +142,85 @@ export function initApp({ onTabChange } = {}) {
     const form = $("[data-book-form]", panelBook);
     const unavailable = $("[data-book-unavailable]", panelBook);
     const success = $("[data-book-success]", panelBook);
-    setZone(tz);
+    const prevBtn = $("[data-week-prev]", panelBook);
+    const nextBtn = $("[data-week-next]", panelBook);
+    const nextFree = $("[data-next-free]", panelBook);
+    const tzGroup = $("[data-tzs]", panelBook);
 
     const dayKey = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
-    const fmt = (d, opts) => new Intl.DateTimeFormat(undefined, { timeZone: tz, ...opts }).format(d);
-    const longWhen = (d) => `${fmt(d, { weekday: "long", day: "numeric", month: "long" })} at ${fmt(d, { hour: "numeric", minute: "2-digit" })}`;
+    const fmt = (d, opts, zone = tz) => new Intl.DateTimeFormat(undefined, { timeZone: zone, ...opts }).format(d);
+    const timeOf = (d) => fmt(d, { hour: "numeric", minute: "2-digit" });
+    const longWhen = (d) => `${fmt(d, { weekday: "long", day: "numeric", month: "long" })} at ${timeOf(d)}`;
+    const tzLabel = () => (tz === EASTERN ? `US ${zoneLong(EASTERN)}` : `your time (${zoneLong(tz)})`);
 
+    // If the visitor is already on US Eastern, the switch has nothing to offer.
+    if (visitorTz === EASTERN) tzGroup.hidden = true;
+    $("[data-local-name]", panelBook).textContent = cityOf(visitorTz);
+
+    let slots = [];
     let byDay = new Map();
+    let dayKeys = [];
+    let page = 0;
+    let selectedDay = null;
     let chosen = null;
+    const PAGE = 5;
 
     const pressOnly = (container, btn) => $$("button", container).forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
 
+    // Radio-style segmented controls (arrow keys move between options).
+    const segmented = (group, onPick) => {
+      const opts = $$('[role="radio"]', group);
+      const pick = (btn, focus) => {
+        opts.forEach((o) => { o.setAttribute("aria-checked", String(o === btn)); o.tabIndex = o === btn ? 0 : -1; });
+        if (focus) btn.focus();
+        onPick(btn);
+      };
+      opts.forEach((o, i) => {
+        o.addEventListener("click", () => { if (o.getAttribute("aria-checked") !== "true") pick(o, false); });
+        o.addEventListener("keydown", (e) => {
+          const d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+          if (!d) return;
+          e.preventDefault();
+          pick(opts[(i + d + opts.length) % opts.length], true);
+        });
+      });
+    };
+
+    const choose = (d) => {
+      chosen = d;
+      $("[data-picked]", form).textContent = `${longWhen(d)}, ${tzLabel()} · ${duration} minutes`;
+      picker.hidden = true;
+      form.hidden = false;
+      setStatus(form, "", "");
+      $("#b-name").focus();
+    };
+
     const showSlots = (key) => {
+      selectedDay = key;
       slotsEl.replaceChildren();
-      for (const d of byDay.get(key)) {
+      for (const d of byDay.get(key) || []) {
         const b = document.createElement("button");
         b.type = "button";
         b.className = "slot";
         b.setAttribute("aria-pressed", "false");
-        b.textContent = fmt(d, { hour: "numeric", minute: "2-digit" });
-        b.setAttribute("aria-label", longWhen(d));
-        b.addEventListener("click", () => {
-          pressOnly(slotsEl, b);
-          chosen = d;
-          $("[data-picked]", form).textContent = `${longWhen(d)} (${tzName})`;
-          picker.hidden = true;
-          form.hidden = false;
-          setStatus(form, "", "");
-          $("#b-name").focus();
-        });
+        b.textContent = timeOf(d);
+        b.setAttribute("aria-label", `${longWhen(d)}, ${duration} minutes`);
+        b.addEventListener("click", () => { pressOnly(slotsEl, b); choose(d); });
         slotsEl.appendChild(b);
       }
     };
 
-    // Weekday (0 = Sunday) of a date in the displayed time zone.
-    const weekdayIn = (d) => ({ Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 })[
-      new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short" }).format(d)];
-    const isWeekend = (d) => [0, 6].includes(weekdayIn(d));
-
-    // Every calendar day from today to the last offered day, so closed days are visible too.
+    // Only days that have open times, five at a time, with arrows for the next week.
     const showDays = () => {
       daysEl.replaceChildren();
-      let firstOpen = null;
-      const keys = [...byDay.keys()];
-      const last = keys[keys.length - 1];
-      for (let i = 0, d = new Date(); i < 40; i++, d = new Date(d.getTime() + 86400_000)) {
-        const key = dayKey(d);
+      const pages = Math.max(1, Math.ceil(dayKeys.length / PAGE));
+      page = Math.min(Math.max(page, 0), pages - 1);
+      prevBtn.disabled = page === 0;
+      nextBtn.disabled = page >= pages - 1;
+      const shown = dayKeys.slice(page * PAGE, page * PAGE + PAGE);
+      for (const key of shown) {
         const list = byDay.get(key);
+        const d = list[0];
         const b = document.createElement("button");
         b.type = "button";
         b.className = "day";
@@ -200,44 +229,54 @@ export function initApp({ onTabChange } = {}) {
         w.textContent = fmt(d, { weekday: "short" });
         n.textContent = fmt(d, { day: "numeric" });
         m.textContent = fmt(d, { month: "short" });
-        const longDay = fmt(d, { weekday: "long", day: "numeric", month: "long" });
-        if (list) {
-          b.setAttribute("aria-pressed", "false");
-          b.setAttribute("aria-label", `${longDay}, ${list.length} ${list.length === 1 ? "time" : "times"} available`);
-          b.addEventListener("click", () => { pressOnly(daysEl, b); showSlots(key); });
-          if (!firstOpen) firstOpen = b;
-        } else {
-          const note = isWeekend(d) ? "Closed" : (firstOpen ? "Full" : "Not Available");
-          m.textContent = note;
-          m.className = "day__note";
-          b.disabled = true;
-          b.setAttribute("aria-label", `${longDay}, ${note.toLowerCase()}`);
-        }
+        b.setAttribute("aria-pressed", String(key === selectedDay));
+        b.setAttribute("aria-label", `${fmt(d, { weekday: "long", day: "numeric", month: "long" })}, ${list.length} ${list.length === 1 ? "time" : "times"} available`);
+        b.addEventListener("click", () => { pressOnly(daysEl, b); showSlots(key); });
         daysEl.appendChild(b);
-        if (key === last) break;
       }
-      if (firstOpen) firstOpen.click();
+      if (!shown.includes(selectedDay) && shown.length) {
+        daysEl.firstChild.setAttribute("aria-pressed", "true");
+        showSlots(shown[0]);
+      } else if (selectedDay) {
+        showSlots(selectedDay);
+      }
     };
+    prevBtn.addEventListener("click", () => { page -= 1; selectedDay = null; showDays(); });
+    nextBtn.addEventListener("click", () => { page += 1; selectedDay = null; showDays(); });
+
+    // Group the loaded times by day in the zone currently shown.
+    const regroup = () => {
+      byDay = new Map();
+      for (const d of slots) {
+        const k = dayKey(d);
+        if (!byDay.has(k)) byDay.set(k, []);
+        byDay.get(k).push(d);
+      }
+      dayKeys = [...byDay.keys()];
+      $("[data-tz]", panelBook).textContent = tzLabel();
+      if (slots.length) {
+        nextFree.hidden = false;
+        $("[data-next-free-when]", nextFree).textContent = `${fmt(slots[0], { weekday: "short", day: "numeric", month: "short" })}, ${timeOf(slots[0])}`;
+      } else {
+        nextFree.hidden = true;
+      }
+    };
+    nextFree.addEventListener("click", () => { if (slots[0]) choose(slots[0]); });
 
     const loadSlots = async () => {
       loading.hidden = false;
       picker.hidden = true;
+      unavailable.hidden = true;
       try {
-        const res = await fetch("/api/slots", { headers: { Accept: "application/json" } });
+        const res = await fetch(`/api/slots?duration=${duration}`, { headers: { Accept: "application/json" } });
         if (!res.ok) throw new Error("slots unavailable");
         const data = await res.json();
-        if (data.timeZone) setZone(data.timeZone);
-        byDay = new Map();
-        for (const iso of data.slots || []) {
-          const d = new Date(iso);
-          // No weekend slots in the displayed time zone either.
-          if (isWeekend(d)) continue;
-          const k = dayKey(d);
-          if (!byDay.has(k)) byDay.set(k, []);
-          byDay.get(k).push(d);
-        }
+        slots = (data.slots || []).map((iso) => new Date(iso));
         loading.hidden = true;
-        if (!byDay.size) { unavailable.hidden = false; return; }
+        if (!slots.length) { unavailable.hidden = false; return; }
+        selectedDay = null;
+        page = 0;
+        regroup();
         picker.hidden = false;
         showDays();
       } catch (_) {
@@ -246,6 +285,16 @@ export function initApp({ onTabChange } = {}) {
       }
     };
 
+    segmented($("[data-durations]", panelBook), (btn) => { duration = Number(btn.dataset.duration); loadSlots(); });
+    segmented(tzGroup, (btn) => {
+      tz = btn.dataset.tzMode === "eastern" ? EASTERN : visitorTz;
+      const keepDay = selectedDay && byDay.get(selectedDay) ? byDay.get(selectedDay)[0] : null;
+      regroup();
+      selectedDay = keepDay ? dayKey(keepDay) : null;
+      page = selectedDay ? Math.floor(dayKeys.indexOf(selectedDay) / PAGE) : 0;
+      showDays();
+    });
+
     $("[data-change-time]", form).addEventListener("click", () => {
       form.hidden = true;
       picker.hidden = false;
@@ -253,20 +302,48 @@ export function initApp({ onTabChange } = {}) {
       if (pressed) pressed.focus();
     });
 
+    // Add-to-calendar links for the confirmation screen.
+    const stamp = (d) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+    const calendarLinks = (start, end, joinUrl) => {
+      const title = "Call with Aakash Remesh";
+      const details = `${duration}-minute call with Aakash Remesh (aakashremesh.com).${joinUrl ? `\nJoin: ${joinUrl}` : "\nThe video link is in your confirmation email."}`;
+      const g = new URL("https://calendar.google.com/calendar/render");
+      g.search = new URLSearchParams({ action: "TEMPLATE", text: title, dates: `${stamp(start)}/${stamp(end)}`, details, location: joinUrl || "Video call" });
+      const o = new URL("https://outlook.live.com/calendar/0/deeplink/compose");
+      o.search = new URLSearchParams({ subject: title, startdt: start.toISOString(), enddt: end.toISOString(), body: details, location: joinUrl || "Video call", path: "/calendar/action/compose", rru: "addevent" });
+      const esc = (s) => s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+      const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//aakashremesh.com//Booking//EN", "BEGIN:VEVENT",
+        `UID:${stamp(start)}-web@aakashremesh.com`, `DTSTAMP:${stamp(new Date())}`, `DTSTART:${stamp(start)}`, `DTEND:${stamp(end)}`,
+        `SUMMARY:${esc(title)}`, `DESCRIPTION:${esc(details)}`, `LOCATION:${esc(joinUrl || "Video call")}`,
+        "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:Call with Aakash Remesh", "TRIGGER:-PT15M", "END:VALARM",
+        "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+      $("[data-cal-google]", success).href = g.toString();
+      $("[data-cal-outlook]", success).href = o.toString();
+      $("[data-cal-ics]", success).href = `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
+    };
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (!chosen || !validate(form)) return;
       busy(form, true);
       setStatus(form, "Booking your call…", "");
       try {
-        const body = await post("/api/book", { ...formData(form), start: chosen.toISOString(), timeZone: visitorTz });
+        const fd = new FormData(form);
+        const data = { ...Object.fromEntries(fd.entries()), software: fd.getAll("software") };
+        const body = await post("/api/book", { ...data, start: chosen.toISOString(), durationMin: duration, timeZone: visitorTz });
+        const start = new Date(body.booking.start);
+        const end = new Date(body.booking.end || start.getTime() + duration * 60_000);
         form.hidden = true;
-        $("[data-success-text]", success).textContent = `${longWhen(new Date(body.booking.start))} (${tzName}).`;
+        $("[data-success-text]", success).textContent = `${longWhen(start)}, ${tzLabel()}, for ${duration} minutes.`;
+        const join = body.booking.joinUrl;
+        $("[data-success-join]", success).hidden = !join;
+        if (join) { const a = $("[data-join-link]", success); a.href = join; a.textContent = "Open the video link"; }
+        calendarLinks(start, end, join);
         success.hidden = false;
         success.focus();
       } catch (err) {
         setStatus(form, err.message, "err");
-        if (/no longer available|just took/i.test(err.message)) { chosen = null; loadSlots(); form.hidden = true; }
+        if (/no longer available|just took/i.test(err.message)) { chosen = null; form.hidden = true; loadSlots(); }
       } finally {
         busy(form, false);
       }

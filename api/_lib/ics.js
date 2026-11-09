@@ -20,7 +20,8 @@ function fold(line) {
   return chunks.join("\r\n ");
 }
 
-export function buildIcs({ uid, start, end, summary, description, location, url, organizer, attendees, method = "REQUEST" }) {
+export function buildIcs({ uid, start, end, summary, description, location, url, organizer, attendees, method = "REQUEST", sequence = 0 }) {
+  const cancelled = method === "CANCEL";
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
@@ -29,7 +30,7 @@ export function buildIcs({ uid, start, end, summary, description, location, url,
     `METHOD:${method}`,
     "BEGIN:VEVENT",
     `UID:${uid}`,
-    "SEQUENCE:0",
+    `SEQUENCE:${sequence}`,
     `DTSTAMP:${stamp(new Date())}`,
     `DTSTART:${stamp(start)}`,
     `DTEND:${stamp(end)}`,
@@ -39,13 +40,15 @@ export function buildIcs({ uid, start, end, summary, description, location, url,
     url ? `URL:${url}` : "",
     `ORGANIZER;CN=${param(organizer.name)}:mailto:${organizer.email}`,
     ...attendees.map((a) => `ATTENDEE;CN=${param(a.name)};ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:${a.email}`),
-    "STATUS:CONFIRMED",
+    cancelled ? "STATUS:CANCELLED" : "STATUS:CONFIRMED",
     "TRANSP:OPAQUE",
-    "BEGIN:VALARM",
-    "ACTION:DISPLAY",
-    "DESCRIPTION:Call with Aakash Remesh in 15 minutes",
-    "TRIGGER:-PT15M",
-    "END:VALARM",
+    ...(cancelled ? [] : [
+      "BEGIN:VALARM",
+      "ACTION:DISPLAY",
+      "DESCRIPTION:Call with Aakash Remesh in 15 minutes",
+      "TRIGGER:-PT15M",
+      "END:VALARM",
+    ]),
     "END:VEVENT",
     "END:VCALENDAR",
   ].filter(Boolean);

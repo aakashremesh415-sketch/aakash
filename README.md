@@ -211,25 +211,49 @@ clean DMARC reports, tighten DMARC to `p=quarantine`, then `p=reject`.
 
 ### How booking works
 
-- `/api/slots` lists open 20-minute times; the page shows them in US Eastern Time,
-  with weekends marked Closed and the next two days marked Not Available.
-- `/api/book` checks the time is still offered, reserves it (a Vercel Blob file per slot;
-  Blob refuses to overwrite, so two people can't take the same time), emails you first, then
-  sends the visitor a confirmation with a calendar invite. If your email can't be delivered,
-  the reservation is undone and the visitor is asked to try again.
+- `/api/slots?duration=20|45` lists open times for a 20-minute intro or a 45-minute scoping
+  call. The page shows them in the **visitor's own time zone**, with a switch to US Eastern,
+  one week (five open days) at a time, plus a "Next available" shortcut.
+- `/api/book` checks the time is still offered and reserves it. Times sit on a 30-minute grid
+  (20 minutes + 10 buffer); a 45-minute call reserves two grid cells. Each cell is a Vercel
+  Blob file and Blob refuses to overwrite, so two people can't take overlapping time. It
+  emails you first, then sends the visitor a confirmation with a calendar invite, the video
+  link and a **cancel / reschedule link**. If your email can't be delivered, the reservation is
+  undone and the visitor is asked to try again.
+- The form asks two optional prep questions (accounting software, number of entities); the
+  answers appear in your booking email and the invite.
+- The confirmation screen has **Add to calendar** buttons (Google, Outlook, Apple/.ics).
+- **Cancel / reschedule**: the link opens `/cancel#<code>`. The code is signed with
+  `BOOKING_SECRET`, so it can't be guessed or edited. Cancelling frees the slot, removes the
+  Google Meet event and emails both of you a cancellation (it disappears from calendars).
+  "Pick a new time" cancels first, then opens the booking calendar.
+- **Reminders**: Vercel Cron calls `/api/remind` daily at 11:00 UTC (`vercel.json`). It emails
+  a reminder for every call starting 12 to 36 hours later, which is the next day's calls,
+  and deletes stored details of calls that are over.
+- **What's stored**: the booked time (no personal data), plus the visitor's name, email and
+  company **encrypted** with `BOOKING_SECRET` until the call is over (needed for the reminder
+  and the cancel link). See `/privacy`.
 - `/api/message` emails you the contact form with Reply-To set to the sender. It sends
   no auto-reply, so the form can't be abused to email strangers.
 - Spam protection: hidden honeypot field, minimum fill time, same-origin check, per-IP
   rate limits, max two upcoming calls per email address, and input cleaning against
   email-header and calendar injection.
-- To cancel or move a call, reply to the booking email, then delete the slot's file
-  (`bookings/slots/<time>.json`) in Vercel → Storage → your Blob store to free the time.
+
+**Settings for these features** (Vercel → Settings → Environment Variables, Production):
+
+| Variable | Notes |
+|---|---|
+| `BOOKING_SECRET` | Long random string (`openssl rand -hex 32`). Without it, bookings still work but emails have no cancel link and no reminders go out. Changing it invalidates existing cancel links. |
+| `CRON_SECRET` | Long random string. Vercel sends it to `/api/remind`; without it reminders are off. |
+| `BOOKING_DURATIONS` | Optional, default `20,45`. |
+| `SITE_URL` | Optional, default `https://www.aakashremesh.com` (used in email links). |
 
 ## Local development
 
 ```sh
 npm install
 npm test                         # backend tests
+npm run test:e2e                 # builds, then clicks through booking in Chrome (set CHROME_PATH if needed)
 npm run build                    # bundle script + rebuild index.html
 (cd public && python3 -m http.server 8000)   # static preview (booking shows its fallback)
 npx vercel dev                   # full preview including /api (needs the Vercel CLI)

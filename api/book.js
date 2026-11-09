@@ -1,12 +1,17 @@
 // POST /api/book -> reserves a slot, emails Aakash, then sends the visitor a confirmation + invite.
 import { randomUUID } from "node:crypto";
-import { BOOKING, mailConfigured } from "./_lib/config.js";
+import { BOOKING, bookingFor, mailConfigured } from "./_lib/config.js";
 import { isOfferedSlot, slotEnd } from "./_lib/slots.js";
-import { busyBetween, release, reserve, upcomingCountForEmail } from "./_lib/store.js";
+import { busyBetween, release, reserve, saveContact, upcomingCountForEmail } from "./_lib/store.js";
 import { sendBookingConfirmation, sendBookingToOwner } from "./_lib/mail.js";
 import { createTeamsMeeting, deleteTeamsMeeting, teamsConfigured } from "./_lib/teams.js";
 import { createMeetMeeting, deleteMeetMeeting, meetConfigured } from "./_lib/meet.js";
+import { cancelToken } from "./_lib/secure.js";
 import { EMAIL_RE, clean, cleanText, clientIp, json, limited, looksLikeBot, readJson, sameOrigin, validTz } from "./_lib/http.js";
+
+// The two optional prep questions. Anything else sent is ignored.
+export const SOFTWARE = ["QuickBooks Online", "QuickBooks Desktop", "Intuit Enterprise Suite", "Xero", "NetSuite", "Sage Intacct", "Zoho Books", "Other"];
+export const ENTITIES = ["1", "2-3", "4+"];
 
 async function handler(req) {
   if (!sameOrigin(req)) return json(403, { ok: false, error: "Forbidden." });
@@ -25,6 +30,9 @@ async function handler(req) {
   const tzIn = clean(body.timeZone, 64);
   const clientTz = validTz(tzIn) ? tzIn : BOOKING.hostTimeZone;
   const start = new Date(clean(body.start, 40));
+  const cfg = bookingFor(body.durationMin);
+  const software = (Array.isArray(body.software) ? body.software : [body.software]).filter((s) => SOFTWARE.includes(s)).slice(0, SOFTWARE.length);
+  const entities = ENTITIES.includes(body.entities) ? body.entities : "";
 
   if (!fullName || !company || !EMAIL_RE.test(email) || isNaN(start.getTime())) {
     return json(400, { ok: false, error: "Please fill in your name, work email, company and a time." });
@@ -35,15 +43,16 @@ async function handler(req) {
       return json(409, { ok: false, error: "You already have upcoming calls booked. Reply to your confirmation email to change them." });
     }
     const busy = await busyBetween(new Date(start.getTime() - 86400_000), new Date(start.getTime() + 86400_000));
-    if (!isOfferedSlot(start, busy)) {
+    if (!isOfferedSlot(start, busy, new Date(), cfg)) {
       return json(409, { ok: false, error: "That time is no longer available. Please pick another slot." });
     }
 
     const booking = {
       uid: `${randomUUID()}@aakashremesh.com`,
       start: start.toISOString(),
-      end: slotEnd(start).toISOString(),
-      fullName, email, company, notes, clientTz,
+      end: slotEnd(start, cfg).toISOString(),
+      durationMin: cfg.durationMin,
+      fullName, email, company, notes, clientTz, software, entities,
       createdAt: new Date().toISOString(),
     };
     if (!(await reserve(booking))) {
@@ -61,10 +70,18 @@ async function handler(req) {
         const meeting = await provider.create(booking);
         booking.meetingUrl = meeting.joinUrl;
         booking.meetingProvider = provider.name;
-        eventId = meeting.eventId;
+        booking.eventId = eventId = meeting.eventId;
       } catch (err) {
         console.error(`[book] ${provider.name} meeting creation failed; using the fallback link`, err);
       }
+    }
+
+    // Keep the details (encrypted) for the reminder and the cancel link. Without them the
+    // booking still stands; the emails just leave the cancel link out.
+    try {
+      if (await saveContact(booking)) booking.cancelUrl = `${BOOKING.siteUrl}/cancel#${cancelToken(booking.start, booking.uid)}`;
+    } catch (err) {
+      console.error("[book] couldn't save contact for reminders", err);
     }
 
     // If Aakash can't be told, the booking would be lost, so undo it and say so.
@@ -82,7 +99,8 @@ async function handler(req) {
       // Aakash already has the details and can follow up by email.
       console.error("[book] confirmation email failed", err);
     }
-    return json(200, { ok: true, booking: { start: booking.start, end: booking.end } });
+    const joinUrl = booking.meetingUrl || BOOKING.meetingUrl || "";
+    return json(200, { ok: true, booking: { start: booking.start, end: booking.end, durationMin: booking.durationMin, joinUrl } });
   } catch (err) {
     console.error("[book]", err);
     return json(500, { ok: false, error: "Something went wrong. Please try again, or send a message instead." });
