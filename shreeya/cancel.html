@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; upgrade-insecure-requests">
+  <meta name="referrer" content="no-referrer">
+  <title>Cancel or reschedule — CA Shreeya Mundade</title>
+  <meta name="description" content="Cancel or reschedule your call.">
+  <meta name="author" content="Shreeya Mundade">
+  <meta name="robots" content="noindex">
+  <link rel="canonical" href="https://www.shreeyamundade.com/cancel">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/svg+xml" href="/assets/brand/sm.svg">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <meta name="theme-color" content="#ffffff">
+  <script src="/assets/theme.js"></script>
+  <link rel="preload" href="/assets/fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+  <main class="solo" id="main" data-manage>
+    <img class="solo__face" src="/assets/img/shreeya-c.webp" width="128" height="128" alt="">
+    <p class="eyebrow">Your call</p>
+    <div data-state="loading"><h1>Finding your booking…</h1></div>
+
+    <div data-state="found" hidden>
+      <h1>Cancel or reschedule?</h1>
+      <p class="lead" data-when></p>
+      <div class="solo__actions">
+        <button class="btn btn-brand" type="button" data-reschedule>Pick a new time</button>
+        <button class="btn btn-ghost" type="button" data-cancel>Cancel the call</button>
+      </div>
+      <p class="solo__note">Picking a new time cancels this one first, then takes you to the calendar.</p>
+      <p class="form-status" role="status" aria-live="polite" data-status></p>
+    </div>
+
+    <div data-state="done" hidden>
+      <h1>Cancelled.</h1>
+      <p class="lead">Your call is cancelled and you'll get an email to confirm. The time is free for someone else.</p>
+      <p><a class="btn btn-brand" href="/#contact">Book another time</a></p>
+    </div>
+
+    <div data-state="error" hidden>
+      <h1>This link doesn't work.</h1>
+      <p class="lead" data-error></p>
+      <p><a class="btn btn-brand" href="/#contact">Go to the booking page</a></p>
+    </div>
+  </main>
+  <script src="/assets/cancel.js" defer></script>
+</body>
+</html>
