@@ -210,7 +210,7 @@ print(f"index.html built: {len(page) // 1024} KB, {len(faq)} FAQs")
 import shutil
 
 OUT = ROOT / "public"
-PUBLISH = ["index.html", "404.html", "cancel.html", "privacy.html", "llms.txt", "robots.txt", "sitemap.xml", "favicon.ico", "assets", ".well-known"]
+PUBLISH = ["507185732f25fc5fcca8051716304648.txt", "index.html", "404.html", "cancel.html", "privacy.html", "llms.txt", "robots.txt", "sitemap.xml", "favicon.ico", "assets", ".well-known"]
 if OUT.exists():
     shutil.rmtree(OUT)
 OUT.mkdir()
