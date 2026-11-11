@@ -194,12 +194,7 @@ graph = {
 
 # ---------------------------------------------------------------- home page
 stats = "\n".join(f'              <div><dt>{e(s["value"])}</dt><dd>{e(s["label"])}</dd></div>' for s in P["stats"])
-portrait = "\n".join(
-    f'            <img data-dir="{d}" src="/assets/img/shreeya-{d}.webp" width="960" height="960" '
-    + ('alt="Illustrated portrait of Shreeya Mundade" fetchpriority="high" class="on"' if d == "c" else 'alt="" aria-hidden="true"')
-    + ">"
-    for d in "clrtb"
-)
+portrait = '          <img src="/assets/img/shreeya-c.webp" width="960" height="960" alt="Illustrated portrait of Shreeya Mundade" fetchpriority="high" class="on">'
 services = "\n".join(
     f"""            <li class="card pf-service">
               <span class="pf-num" aria-hidden="true">{i + 1:02d}</span>
@@ -243,143 +238,15 @@ timeline = "\n".join(
     for t in P["timeline"]
 )
 faqs = "\n".join(f"            <details><summary>{e(f['q'])}</summary><p>{e(f['a'])}</p></details>" for f in P["faqs"])
-jump = "\n".join(f'        <a href="{h}">{t}</a>' for h, t in [("#about", "About"), ("#services", "Services"), ("#platforms", "Platforms"), ("#feedback", "Reviews"), ("#experience", "Experience"), ("#faq", "FAQ"), ("#contact", "Book a Call")])
 contact_widget = (SRC / "contact.html").read_text(encoding="utf-8").rstrip()
 
-page = head(P["title"], P["description"], "/", jsonld=graph) + f"""<body>
-{header()}
-  <main id="main">
-    <section class="page-hero pf-hero" aria-labelledby="profile-h1">
-      <div class="container pf-heroGrid">
-        <div class="pf-heroCopy">
-          <span class="pill">{e(P['jobTitle'])}</span>
-          <h1 id="profile-h1" class="pf-h1"><span class="pf-hello">{e(P['hello'])}</span>{e(P['h1'])}</h1>
-          <p class="pf-role"><strong>{e(FULL)}</strong> · {e(P['renocrewRole'])}, Renocrew Solutions</p>
-          <p class="pf-lead">{e(P['lead'])}</p>
-          <div class="pf-ctas">
-            <a href="#contact" class="btn btn-brand">Book a Free Call</a>
-            {ext(P['upworkUrl'], 'Upwork', 'btn btn-ghost', me=True)}
-            {ext(P['linkedinUrl'], 'LinkedIn', 'btn btn-ghost', me=True)}
-          </div>
-          <dl class="pf-heroStats" data-count="{len(P['stats'])}">
-{stats}
-          </dl>
-        </div>
-        <div class="pf-heroArt">
-          <div class="look">
-{portrait}
-          </div>
-        </div>
-      </div>
-      <nav aria-label="On this page" class="container pf-jump">
-{jump}
-      </nav>
-    </section>
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from home_layout import build_home
 
-    <section id="about" aria-labelledby="about-h">
-      <div class="container pf-about">
-{sec_head('About', P['about']['heading'], 'about-h')}
-        <div class="pf-aboutBody">
-          {''.join(f'<p>{e(t)}</p>' for t in P['about']['paragraphs'])}
-          <p class="pf-note">{e(P['about']['note'])}</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="services" class="alt" aria-labelledby="services-h">
-      <div class="container">
-{sec_head('What I Do', 'Where I Can Help', 'services-h')}
-        <ol class="grid g3 pf-cards">
-{services}
-        </ol>
-      </div>
-    </section>
-
-    <section id="platforms" aria-labelledby="platforms-h">
-      <div class="container">
-{sec_head('Platforms & Tools', 'The Stack I Work In', 'platforms-h')}
-        <div class="pf-groups">
-{groups}
-        </div>
-      </div>
-    </section>
-
-    <section id="feedback" class="alt" aria-labelledby="feedback-h">
-      <div class="container">
-{sec_head('Client Feedback', 'Trusted by Clients on Upwork', 'feedback-h')}
-        <dl class="pf-feedStats">
-{fstats}
-        </dl>
-        <div class="pf-reviews">
-          <div class="pf-reviewsBar">
-            <p class="pf-reviewsCount">{len(P['reviews'])} client reviews</p>
-            <div class="pf-reviewsNav">
-              <button type="button" class="pf-navBtn" data-review-prev aria-controls="review-track" aria-label="Previous review">←</button>
-              <button type="button" class="pf-navBtn" data-review-next aria-controls="review-track" aria-label="Next review">→</button>
-            </div>
-          </div>
-          <ul id="review-track" class="pf-reviewTrack" tabindex="0" aria-label="Client reviews for {e(P['givenName'])}">
-{reviews}
-          </ul>
-        </div>
-        <h3 class="pf-subhead">Recent Upwork Engagements</h3>
-        <ul class="pf-engagements">
-{engagements}
-        </ul>
-        <p class="pf-more">{ext(P['upworkUrl'], 'Read all reviews on Upwork')}</p>
-      </div>
-    </section>
-
-    <section id="experience" aria-labelledby="experience-h">
-      <div class="container pf-experience">
-        <div>
-{sec_head('Experience', '7+ Years on the Books.', 'experience-h')}
-          <h3 class="pf-groupLabel">Certifications</h3>
-          <ul class="pf-creds">
-{certs}
-          </ul>
-          <h3 class="pf-groupLabel">Education</h3>
-          <ul class="pf-creds">
-{edu}
-          </ul>
-        </div>
-        <ol class="pf-timeline">
-{timeline}
-        </ol>
-      </div>
-    </section>
-
-    <section id="faq" class="alt" aria-labelledby="faq-h">
-      <div class="container faq-wrap">
-{sec_head('FAQ', 'Questions Clients Ask', 'faq-h')}
-        <div class="faq">
-{faqs}
-        </div>
-      </div>
-    </section>
-
-    <section id="contact" aria-labelledby="contact-h">
-      <div class="container contact-wrap">
-        <div>
-          <span class="eyebrow">Contact</span>
-          <h2 id="contact-h">{e(P['contact']['heading'])}</h2>
-          <p class="contact-lead">{e(P['contact']['lead'])}</p>
-          <div class="pf-ctas">
-            {ext(P['linkedinUrl'], 'LinkedIn', 'btn btn-ghost', me=True)}
-            {ext(P['upworkUrl'], 'Upwork', 'btn btn-ghost', me=True)}
-          </div>
-          <p class="pf-note">{e(P['location']['label'])} · Speaks {' · '.join(P['languages'])}</p>
-        </div>
-        <div class="bk">
-{contact_widget}
-        </div>
-      </div>
-    </section>
-  </main>
-{footer()}  <script src="/assets/app.js" defer></script>
-</body>
-</html>
-"""
+parts = dict(services=services, fstats=fstats, reviews=reviews, engagements=engagements, certs=certs, edu=edu,
+             timeline=timeline, groups=groups, faqs=faqs, contact_widget=contact_widget, stats=stats, portrait=portrait)
+page = build_home(P, e, ext, head, graph, parts)
 (ROOT / "index.html").write_text(page, encoding="utf-8")
 
 # ---------------------------------------------------------------- small pages
