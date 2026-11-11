@@ -7,12 +7,14 @@ Usage: python3 tools/build.py
 """
 import html
 import json
+from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
-SITE = "https://aakashremesh.com"
+SITE = "https://www.aakashremesh.com"
 PERSON_ID = f"{SITE}/#person"
+TODAY = date.today().isoformat()
 
 UPWORK = "https://www.upwork.com/freelancers/~01dfe8e2fc663ed9ec"
 LINKEDIN = "https://www.linkedin.com/in/aakashremesh/"
@@ -81,7 +83,9 @@ graph = {
             "isPartOf": {"@id": f"{SITE}/#website"},
             "about": {"@id": PERSON_ID},
             "mainEntity": {"@id": PERSON_ID},
+            "description": "Aakash Remesh sets up, cleans up and migrates QuickBooks Online, Intuit Enterprise Suite, Sage Intacct, NetSuite, Zoho Books and Xero for eCommerce, SaaS, manufacturing and multi-entity businesses.",
             "primaryImageOfPage": f"{SITE}/assets/img/og-card.jpg",
+            "dateModified": TODAY,
             "inLanguage": "en",
         },
         {
@@ -129,7 +133,25 @@ graph = {
                 }
                 for n, d in SERVICES
             ],
+            "email": "mailto:info@aakashremesh.com",
             "sameAs": [LINKEDIN, UPWORK],
+        },
+        {
+            "@type": "ProfessionalService",
+            "@id": f"{SITE}/#business",
+            "name": "Aakash Remesh — Bookkeeping & Accounting Systems Consulting",
+            "url": f"{SITE}/",
+            "description": "Remote bookkeeping and accounting systems consulting: setups, migrations, cleanups, eCommerce reconciliation, multi-entity accounting and month-end close in QuickBooks Online, Intuit Enterprise Suite, Sage Intacct, NetSuite, Zoho Books and Xero.",
+            "image": f"{SITE}/assets/img/og-card.jpg",
+            "logo": f"{SITE}/assets/favicon.svg",
+            "email": "info@aakashremesh.com",
+            "address": {"@type": "PostalAddress", "addressRegion": "Kerala", "addressCountry": "IN"},
+            "areaServed": AREAS,
+            "founder": {"@id": PERSON_ID},
+            "employee": {"@id": PERSON_ID},
+            "knowsLanguage": ["English", "Hindi", "Malayalam", "Tamil"],
+            "serviceType": [n for n, _ in SERVICES],
+            "sameAs": [UPWORK],
         },
         {
             "@type": "FAQPage",
@@ -200,4 +222,13 @@ for name in PUBLISH:
         shutil.copy2(src, OUT / name)
     else:
         raise SystemExit(f"missing site file: {name}")
+
+# llms.txt (summary for AI assistants) gets the FAQ appended from faq.json,
+# so the answers AI tools quote always match the page.
+llms = (ROOT / "llms.txt").read_text(encoding="utf-8").rstrip() + "\n\n## Frequently Asked Questions\n"
+for f in faq:
+    llms += f"\n### {f['q']}\n\n{f['a']}\n"
+llms += f"\n---\nLast updated: {TODAY}\n"
+(OUT / "llms.txt").write_text(llms, encoding="utf-8")
+
 print(f"public/ ready: {sum(1 for _ in OUT.rglob('*') if _.is_file())} files")
