@@ -6,7 +6,10 @@
     "description": "Eight accounting habits I'd hand to anyone: deferred revenue, profit vs cash, monthly reconciliations, prepaid bills, a close checklist, a clean chart of accounts, intercompany setup and knowing when you've outgrown QuickBooks.",
     "date": "2026-11-11",
     "image": "accounting-secrets-id-share-with-a-spy.jpg",
-    "image_size": [1080, 1350],
+    "image_size": [
+      1080,
+      1350
+    ],
     "image_alt": "A declassified file titled 'Things I would share with a Chinese spy (or anyone else)', listing eight numbered accounting habits.",
     "body": [
       "None of this is secret. These are the eight habits I'd hand to any business owner, or anyone who asked.",
@@ -27,7 +30,7 @@
     "title": "Ticket money isn't revenue (yet)",
     "seo_title": "Deferred revenue explained: why ticket money isn't revenue yet",
     "description": "Sold $100,000 of tickets for an event three months away? Until the event happens it's deferred revenue, a liability, not income. A 70-second explainer with a worked example.",
-    "date": "2026-11-05",
+    "date": "2026-11-03",
     "video": "ticket-money-isnt-revenue-yet",
     "duration": "PT1M12S",
     "body": [
@@ -62,7 +65,7 @@
     "title": "Three companies. Three sets of books.",
     "seo_title": "Multi-entity accounting in QuickBooks Online, Intuit Enterprise Suite, Sage Intacct and NetSuite",
     "description": "Three companies, one month-end close. How multi-entity consolidation plays out in QuickBooks Online, Intuit Enterprise Suite, Sage Intacct and NetSuite, and why the structure matters more than the software.",
-    "date": "2026-11-05",
+    "date": "2026-11-04",
     "video": "three-companies-three-sets-of-books",
     "duration": "PT39S",
     "body": [
@@ -91,7 +94,7 @@
     "title": "Don't move the mess",
     "seo_title": "The costliest accounting system migration mistake: moving the mess",
     "description": "Copying an old chart of accounts straight into a new accounting system wastes most of what you paid for. What to clean up before you migrate: fewer accounts, the right dimensions and a mapping.",
-    "date": "2026-11-09",
+    "date": "2026-11-05",
     "video": "dont-move-the-mess",
     "duration": "PT27S",
     "body": [
@@ -118,7 +121,7 @@
     "title": "Five signs you've outgrown QuickBooks",
     "seo_title": "Five signs you've outgrown QuickBooks Online",
     "description": "QuickBooks is a great tool, until the business changes shape. Five signs it might be time to look at the next step, from Excel consolidations to revenue schedules only one person understands.",
-    "date": "2026-11-09",
+    "date": "2026-11-06",
     "video": "five-signs-youve-outgrown-quickbooks",
     "duration": "PT27S",
     "body": [
@@ -146,7 +149,7 @@
     "title": "You paid for it. You haven't used it yet.",
     "seo_title": "Prepaid expenses explained: why a $12,000 payment is a $1,000 expense",
     "description": "You paid $12,000 for a year of insurance in January, but only $1,000 is a January expense. How prepaid expenses work and why they keep your monthly P&L honest.",
-    "date": "2026-11-09",
+    "date": "2026-11-07",
     "video": "prepaid-expenses-explained",
     "duration": "PT25S",
     "body": [
@@ -171,7 +174,7 @@
     "title": "Profitable. And out of cash.",
     "seo_title": "How a profitable company runs out of cash",
     "description": "Win a $50,000-a-month client who pays in 60 days, and two months later you've paid out $80,000, received nothing and shown $20,000 profit. Why profit and cash drift apart when you grow.",
-    "date": "2026-11-09",
+    "date": "2026-11-08",
     "video": "profitable-and-out-of-cash",
     "duration": "PT24S",
     "body": [
@@ -223,7 +226,7 @@
     "title": "Why your close takes ten days",
     "seo_title": "Why your month-end close takes ten days, and how to speed it up",
     "description": "A slow month-end close is usually a waiting problem, not an accounting problem. Do a little every week, match the bank weekly and chase receipts as they come in.",
-    "date": "2026-11-09",
+    "date": "2026-11-10",
     "video": "why-your-close-takes-ten-days",
     "duration": "PT24S",
     "body": [
