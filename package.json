@@ -10,7 +10,7 @@
     "test:all": "npm test && npm run test:e2e"
   },
   "engines": {
-    "node": "22.x"
+    "node": "24.x"
   },
   "dependencies": {
     "@vercel/blob": "^2.8.1",
