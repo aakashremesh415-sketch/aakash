@@ -54,30 +54,21 @@ if (themeBtn) {
   });
 }
 
-/* ---------- Portrait: five drawings, shows the one looking toward the cursor ---------- */
+/* ---------- Portrait: one front-facing image with a gentle 3D tilt toward the cursor (as on aakashremesh.com) ---------- */
 const look = $(".look");
-if (look && !reduceMotion) {
-  const imgs = Object.fromEntries($$("img", look).map((i) => [i.dataset.dir, i]));
-  let dir = "c";
-  const pick = (dx, dy) => {
-    if (Math.max(Math.abs(dx), Math.abs(dy)) < 0.3) return "c";
-    return Math.abs(dx) >= Math.abs(dy) ? (dx < 0 ? "l" : "r") : dy < 0 ? "t" : "b";
-  };
-  const apply = (dx, dy) => {
-    look.style.setProperty("--dx", dx.toFixed(3));
-    look.style.setProperty("--dy", dy.toFixed(3));
-    const next = pick(dx, dy);
-    if (next !== dir && imgs[next]) { imgs[dir].classList.remove("on"); imgs[next].classList.add("on"); dir = next; }
-  };
+if (look && !reduceMotion && matchMedia("(hover: hover) and (pointer: fine)").matches) {
   const clamp = (v) => Math.max(-1, Math.min(1, v));
+  let raf = 0;
   window.addEventListener("pointermove", (e) => {
-    const r = look.getBoundingClientRect();
-    apply(clamp((e.clientX - (r.left + r.width / 2)) / (r.width * 0.9)), clamp((e.clientY - (r.top + r.height * 0.38)) / (r.height * 0.9)));
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      const r = look.getBoundingClientRect();
+      look.style.setProperty("--dx", clamp((e.clientX - (r.left + r.width / 2)) / (innerWidth * 0.5)).toFixed(3));
+      look.style.setProperty("--dy", clamp((e.clientY - (r.top + r.height / 2)) / (innerHeight * 0.5)).toFixed(3));
+    });
   }, { passive: true });
-  window.addEventListener("deviceorientation", (e) => {
-    if (e.gamma == null || e.beta == null) return;
-    apply(clamp(e.gamma / 20), clamp((e.beta - 45) / 20));
-  });
+  document.documentElement.addEventListener("pointerleave", () => { look.style.setProperty("--dx", "0"); look.style.setProperty("--dy", "0"); });
 }
 
 /* ---------- Review scroller: arrows + swipe/scroll ---------- */
@@ -112,3 +103,25 @@ const moveIndicator = (tab) => {
 initApp({ onTabChange: (tab) => moveIndicator(tab) });
 moveIndicator($('[role="tab"][aria-selected="true"]'));
 window.addEventListener("resize", () => moveIndicator($('[role="tab"][aria-selected="true"]')));
+
+/* ---------- Side panel: highlight the chapter on screen; phone "Book a call" bar ---------- */
+const sideLinks = $$(".side__nav a");
+if (sideLinks.length && "IntersectionObserver" in window) {
+  const byId = new Map(sideLinks.map((a) => [a.getAttribute("href").slice(1), a]));
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      sideLinks.forEach((a) => a.removeAttribute("aria-current"));
+      const a = byId.get(en.target.id);
+      if (a) a.setAttribute("aria-current", "true");
+    });
+  }, { rootMargin: "-40% 0px -55% 0px" });
+  byId.forEach((_, id) => { const s = document.getElementById(id); if (s) io.observe(s); });
+  const cover = $(".cover");
+  if (cover) io.observe(cover); // back at the top: nothing highlighted
+}
+const mbar = $("[data-mbar]");
+const contactSec = $("#contact");
+if (mbar && contactSec && "IntersectionObserver" in window) {
+  new IntersectionObserver(([en]) => mbar.classList.toggle("is-hidden", en.isIntersecting), { threshold: 0.05 }).observe(contactSec);
+}
