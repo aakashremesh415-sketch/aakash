@@ -1,0 +1,248 @@
+[
+  {
+    "slug": "accounting-secrets-id-share-with-a-spy",
+    "title": "Things I would share with a spy (or anyone else)",
+    "seo_title": "8 accounting habits every small business should know",
+    "description": "Eight accounting habits I'd hand to anyone: deferred revenue, profit vs cash, monthly reconciliations, prepaid bills, a close checklist, a clean chart of accounts, intercompany setup and knowing when you've outgrown QuickBooks.",
+    "date": "2026-11-11",
+    "image": "accounting-secrets-id-share-with-a-spy.jpg",
+    "image_size": [1080, 1350],
+    "image_alt": "A declassified file titled 'Things I would share with a Chinese spy (or anyone else)', listing eight numbered accounting habits.",
+    "body": [
+      "None of this is secret. These are the eight habits I'd hand to any business owner, or anyone who asked.",
+      "1. **Cash in isn't revenue (yet).** Paid upfront? It's a liability until you deliver. That's deferred revenue. [More on this](/blog/ticket-money-isnt-revenue-yet).",
+      "1. **Profit isn't cash.** You can be profitable on paper and still miss payroll. Watch both. [More on this](/blog/profitable-and-out-of-cash).",
+      "1. **Reconcile monthly, not yearly.** One bad month is a 20-minute fix. Twelve is a project.",
+      "1. **Spread big prepaid bills.** Annual insurance or software? Expense it month by month, not all at once. [More on this](/blog/prepaid-expenses-explained).",
+      "1. **Same close, same order.** A written month-end checklist is the fastest close you'll ever buy. [More on this](/blog/why-your-close-takes-ten-days).",
+      "1. **Fix the chart of accounts first.** Migrating messy books into a new system just gives you messy books faster. [More on this](/blog/dont-move-the-mess).",
+      "1. **Plan intercompany on day one.** Two or more entities? Set up due-to / due-from accounts before money moves. [More on this](/blog/three-companies-three-sets-of-books).",
+      "1. **Spot when you've outgrown it.** When workarounds take longer than the work, it's time to look past QuickBooks. [More on this](/blog/five-signs-youve-outgrown-quickbooks).",
+      "What stays classified: client names and numbers. Those stay private."
+    ],
+    "cta": "Want the rest of the file? Book a free call and we'll go through your books."
+  },
+  {
+    "slug": "ticket-money-isnt-revenue-yet",
+    "title": "Ticket money isn't revenue (yet)",
+    "seo_title": "Deferred revenue explained: why ticket money isn't revenue yet",
+    "description": "Sold $100,000 of tickets for an event three months away? Until the event happens it's deferred revenue, a liability, not income. A 70-second explainer with a worked example.",
+    "date": "2026-11-05",
+    "video": "ticket-money-isnt-revenue-yet",
+    "duration": "PT1M12S",
+    "body": [
+      "Sold $100,000 of tickets for an event that's still three months away? Great news for the bank balance. But it isn't revenue yet.",
+      "## The example",
+      "Say you're running a conference in March. Tickets go on sale in October, and by December you've sold 400 seats at $250 each. That's $100,000 in the bank, three months before anyone walks through the door.",
+      "Until the event happens, that money is a promise. If the event is postponed or cancelled, most of it goes back to the people who paid. So in the books it sits as **deferred revenue**, a liability: money you're holding, not money you've earned. Once March comes and you've delivered the event, it becomes revenue.",
+      "The same goes for costs you pay early, like the venue deposit and speaker fees. They belong in March too, next to the revenue, so your margin is real.",
+      "## Where it usually goes wrong",
+      "- December looks like a record month, while March, the month you actually did the work, looks empty.",
+      "- The venue deposit and speaker fees paid early land in the wrong months, so the margin is wrong in both.",
+      "- The ticket money gets spent on the next event before this one has happened. That works fine, until one of them is postponed.",
+      "Ticket money is a promise, until the event is done."
+    ],
+    "cta": "Planning an event and want to talk through how to handle advance sales? Book a free call.",
+    "transcript": [
+      "You just sold a hundred thousand dollars' worth of tickets. So why isn't it revenue yet?",
+      "Say you're running a conference in March. Tickets go on sale in October, and by December you've sold four hundred seats at two hundred and fifty dollars each.",
+      "That's a hundred thousand in the bank, three months before anyone walks through the door.",
+      "But it isn't revenue yet. It's a promise. If the event is cancelled or postponed, most of that money goes straight back.",
+      "So in the books, it sits as deferred revenue. A liability. Money you're holding, not money you've earned.",
+      "Then March comes, the event happens, and you've delivered what you sold. Now it becomes revenue.",
+      "The same goes for the venue deposit and speaker fees you paid early. They belong in March too, next to the revenue, so your margin is real.",
+      "Get it wrong, and December looks like a record month, while March, the month you actually did the work, looks empty.",
+      "The real risk is treating ticket money as spare cash, and spending it on the next event before this one has even happened.",
+      "Ticket money is a promise, until the event is done.",
+      "If you're planning an event and want to talk through how to handle advance sales, drop a comment or send me a message. Happy to help."
+    ]
+  },
+  {
+    "slug": "three-companies-three-sets-of-books",
+    "title": "Three companies. Three sets of books.",
+    "seo_title": "Multi-entity accounting in QuickBooks Online, Intuit Enterprise Suite, Sage Intacct and NetSuite",
+    "description": "Three companies, one month-end close. How multi-entity consolidation plays out in QuickBooks Online, Intuit Enterprise Suite, Sage Intacct and NetSuite, and why the structure matters more than the software.",
+    "date": "2026-11-05",
+    "video": "three-companies-three-sets-of-books",
+    "duration": "PT39S",
+    "body": [
+      "Three companies. Three sets of books. One month-end close. Here's how that plays out depending on what you're on.",
+      "## QuickBooks Online",
+      "Every company is a separate file, with its own login. Consolidation happens by hand in Excel.",
+      "## Intuit Enterprise Suite",
+      "A real step up. But in my experience, editing an intercompany entry means switching to the consolidated view, and correcting it means going into the entity itself. Back and forth, all day.",
+      "## Sage Intacct and NetSuite",
+      "Multi-entity and multi-location books are far smoother to work in, provided the chart of accounts and dimensions are set up consistently from day one.",
+      "## The point",
+      "The software doesn't fix the structure. The structure makes the software work. If you have two or more entities, set up due-to / due-from accounts before money moves between them."
+    ],
+    "cta": "Running more than one entity or location and the close is a struggle? Book a free call and I'll help you get the structure right, whichever system you're on.",
+    "transcript": [
+      "Three companies. Three sets of books. One month-end close.",
+      "In QuickBooks Online, every company is a separate file, consolidated by hand in Excel.",
+      "Intuit Enterprise Suite helps. But editing an intercompany entry means the consolidated view, and fixing it means going into that entity. Back and forth, all day.",
+      "Sage Intacct and NetSuite handle multi-entity far more smoothly, if your chart of accounts and dimensions are set up right from day one.",
+      "The software doesn't fix the structure. The structure makes the software work.",
+      "Struggling with a multi-entity close? Reach out to me. I'll help you get the structure right."
+    ]
+  },
+  {
+    "slug": "dont-move-the-mess",
+    "title": "Don't move the mess",
+    "seo_title": "The costliest accounting system migration mistake: moving the mess",
+    "description": "Copying an old chart of accounts straight into a new accounting system wastes most of what you paid for. What to clean up before you migrate: fewer accounts, the right dimensions and a mapping.",
+    "date": "2026-11-09",
+    "video": "dont-move-the-mess",
+    "duration": "PT27S",
+    "body": [
+      "The costliest migration mistake I keep seeing? Moving the mess.",
+      "A company buys a new accounting system, then copies its old chart of accounts straight across. Hundreds of accounts. A separate account for every customer. \"Misc 2\" included.",
+      "The new system could track customers, departments and locations as dimensions. Instead, the reports look exactly like they did before, and the money spent on the new system buys very little.",
+      "## Clean up before you move",
+      "- **Fewer accounts.** Merge the duplicates and the one-off accounts.",
+      "- **The right dimensions.** Track customers, departments and locations as dimensions, not as separate accounts.",
+      "- **A map from every old account to its new home,** so history comes across cleanly.",
+      "A new system won't fix old habits. The setup does."
+    ],
+    "cta": "Planning a move? Book a free call before you migrate, not after.",
+    "transcript": [
+      "The costliest migration mistake I keep seeing? Moving the mess.",
+      "A company buys a new system, then copies four hundred old accounts straight across. Misc two included.",
+      "The new system could track customers and departments as dimensions. Instead, the reports look just like before.",
+      "Clean up first: fewer accounts, the right dimensions, a map from old to new.",
+      "Planning a move? Reach out to me before you migrate."
+    ]
+  },
+  {
+    "slug": "five-signs-youve-outgrown-quickbooks",
+    "title": "Five signs you've outgrown QuickBooks",
+    "seo_title": "Five signs you've outgrown QuickBooks Online",
+    "description": "QuickBooks is a great tool, until the business changes shape. Five signs it might be time to look at the next step, from Excel consolidations to revenue schedules only one person understands.",
+    "date": "2026-11-09",
+    "video": "five-signs-youve-outgrown-quickbooks",
+    "duration": "PT27S",
+    "body": [
+      "QuickBooks is a great tool. Until the business changes shape. Five signs it might be time to look at the next step:",
+      "1. You consolidate more than one company in Excel.",
+      "1. Classes are stretched to track projects, departments, locations and grants all at once.",
+      "1. Approvals happen over email, and nobody's sure who signed off.",
+      "1. You rebuild the same reports in a spreadsheet every month-end.",
+      "1. Revenue schedules live in a spreadsheet only one person understands.",
+      "Outgrowing QuickBooks isn't a failure. It usually means the business is growing."
+    ],
+    "cta": "Recognise three or more? Book a free call and we'll work out whether it's time.",
+    "transcript": [
+      "Five signs you've outgrown QuickBooks.",
+      "One: you consolidate companies in Excel.",
+      "Two: classes are stretched to track everything.",
+      "Three: approvals happen over email.",
+      "Four: you rebuild the same reports every month.",
+      "Five: revenue schedules live in a spreadsheet only one person understands.",
+      "Three or more? Reach out to me, and we'll see if it's time."
+    ]
+  },
+  {
+    "slug": "prepaid-expenses-explained",
+    "title": "You paid for it. You haven't used it yet.",
+    "seo_title": "Prepaid expenses explained: why a $12,000 payment is a $1,000 expense",
+    "description": "You paid $12,000 for a year of insurance in January, but only $1,000 is a January expense. How prepaid expenses work and why they keep your monthly P&L honest.",
+    "date": "2026-11-09",
+    "video": "prepaid-expenses-explained",
+    "duration": "PT25S",
+    "body": [
+      "You paid $12,000 in January. Only $1,000 of it is a January expense.",
+      "## The example",
+      "Take a year of business insurance, paid up front. Expense it all at once and January looks terrible, while February to December look better than they really are.",
+      "Instead, it sits on the balance sheet as a **prepaid expense**, and $1,000 moves to the P&L each month. The same goes for annual software, rent paid in advance and yearly subscriptions.",
+      "It's the flip side of [deferred revenue](/blog/ticket-money-isnt-revenue-yet): money moves now, but the cost belongs to the months you actually use what you paid for.",
+      "The cash leaves once. The cost arrives monthly."
+    ],
+    "cta": "Want monthly numbers that tell the truth? Book a free call.",
+    "transcript": [
+      "You paid twelve thousand in January. Why is only one thousand a January expense?",
+      "It's a year of insurance, paid up front. Expense it all now, and January looks terrible while the rest of the year looks too good.",
+      "So it sits as a prepaid asset, and one thousand moves to expense each month.",
+      "The cash leaves once. The cost arrives monthly.",
+      "Want numbers that tell the truth? Reach out to me."
+    ]
+  },
+  {
+    "slug": "profitable-and-out-of-cash",
+    "title": "Profitable. And out of cash.",
+    "seo_title": "How a profitable company runs out of cash",
+    "description": "Win a $50,000-a-month client who pays in 60 days, and two months later you've paid out $80,000, received nothing and shown $20,000 profit. Why profit and cash drift apart when you grow.",
+    "date": "2026-11-09",
+    "video": "profitable-and-out-of-cash",
+    "duration": "PT24S",
+    "body": [
+      "How does a profitable company run out of cash?",
+      "## The example",
+      "You win a client worth $50,000 a month. Delivery costs $40,000 a month. Great deal. But they pay 60 days after each invoice.",
+      "Two months in, you've paid your team $80,000, received nothing, and your P&L shows $20,000 of profit.",
+      "## Why it happens",
+      "Profit comes when you do the work. Cash comes when they pay. Growth eats the gap, so the faster you grow on long payment terms, the more cash you need to carry it.",
+      "That's why you watch both: the P&L tells you whether the work is worth doing, and the cash forecast tells you whether you can afford to keep doing it."
+    ],
+    "cta": "Growing and feeling the squeeze? Book a free call and let's plan your cash before it runs out.",
+    "transcript": [
+      "How does a profitable company run out of cash?",
+      "You win a client worth fifty thousand a month. Delivery costs forty. But they pay in sixty days.",
+      "Two months in, you've paid out eighty thousand, received nothing, and your P&L shows twenty thousand profit.",
+      "Profit comes when you do the work. Cash comes when they pay.",
+      "Growing and feeling the squeeze? Reach out to me."
+    ]
+  },
+  {
+    "slug": "cash-vs-accrual-accounting",
+    "title": "Same coffee shop. Two different Junes.",
+    "seo_title": "Cash vs accrual accounting, explained with one coffee shop",
+    "description": "A coffee shop caters a $2,000 event in June and gets paid in July. On a cash basis June shows $0; on an accrual basis it shows $2,000. The difference between cash and accrual accounting in one example.",
+    "date": "2026-11-09",
+    "video": "cash-vs-accrual-accounting",
+    "duration": "PT24S",
+    "body": [
+      "Same coffee shop. Same month. Two different answers. Both are right.",
+      "## The example",
+      "Your coffee shop caters an event in June. $2,000. The client pays in July.",
+      "- **On a cash basis,** June shows $0. The money hasn't arrived yet.",
+      "- **On an accrual basis,** June shows $2,000, because that's when you did the work.",
+      "## Which one do you need?",
+      "Cash tells you what's in the bank. Accrual tells you what you've earned. You need both to run the business well."
+    ],
+    "cta": "Not sure which one your books are on? Book a free call and I'll walk you through it.",
+    "transcript": [
+      "Your coffee shop caters an event in June. Two thousand dollars. The client pays in July.",
+      "On a cash basis, June shows nothing. The money hasn't arrived yet.",
+      "On an accrual basis, June shows two thousand, because that's when you did the work.",
+      "Cash tells you what's in the bank. Accrual tells you what you've earned.",
+      "Not sure which one your books show? Reach out to me."
+    ]
+  },
+  {
+    "slug": "why-your-close-takes-ten-days",
+    "title": "Why your close takes ten days",
+    "seo_title": "Why your month-end close takes ten days, and how to speed it up",
+    "description": "A slow month-end close is usually a waiting problem, not an accounting problem. Do a little every week, match the bank weekly and chase receipts as they come in.",
+    "date": "2026-11-09",
+    "video": "why-your-close-takes-ten-days",
+    "duration": "PT24S",
+    "body": [
+      "Why does closing the books take ten days every month?",
+      "Usually it's not the accounting. It's the waiting: bank statements, receipts and approvals, all landing at month-end.",
+      "## The fix",
+      "Simple, if not easy: do a little every week.",
+      "- Match the bank weekly.",
+      "- Chase receipts as they come in.",
+      "- Keep a written checklist, and close in the same order every month.",
+      "Then month-end becomes a final check, not a ten-day scramble."
+    ],
+    "cta": "Want a faster close? Book a free call.",
+    "transcript": [
+      "Why does closing the books take ten days every month?",
+      "Usually, it's not the accounting. It's the waiting. For bank statements, receipts and approvals, all at month-end.",
+      "The fix: do a little every week. Match the bank weekly. Chase receipts as they come in.",
+      "Then month-end is a final check, not a ten-day scramble.",
+      "Want a faster close? Reach out to me."
+    ]
+  }
+]

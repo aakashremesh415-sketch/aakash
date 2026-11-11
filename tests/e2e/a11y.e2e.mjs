@@ -31,7 +31,7 @@ async function scan(path, colorScheme, viewport = { width: 1440, height: 900 }) 
   return result;
 }
 
-for (const path of ["/", "/privacy", "/cancel", "/404"]) {
+for (const path of ["/", "/privacy", "/cancel", "/404", "/blog", "/blog/ticket-money-isnt-revenue-yet", "/blog/accounting-secrets-id-share-with-a-spy"]) {
   for (const scheme of ["light", "dark"]) {
     test(`no WCAG A/AA violations: ${path} (${scheme})`, async () => {
       const v = await scan(path, scheme);

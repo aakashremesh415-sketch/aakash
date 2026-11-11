@@ -204,13 +204,32 @@ for key, value in {
 (ROOT / "index.html").write_text(page)
 print(f"index.html built: {len(page) // 1024} KB, {len(faq)} FAQs")
 
+# ---- Blog and sitemap ---------------------------------------------------------
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import blog
+
+blog_urls, blog_llms = blog.build(ROOT, SITE, PERSON_ID, TODAY)
+SITEMAP = [
+    (f"{SITE}/", TODAY),
+    (f"{SITE}/assets/Aakash-Remesh-Resume.pdf", "2026-10-07"),
+    (f"{SITE}/privacy", "2026-11-11"),
+] + blog_urls
+(ROOT / "sitemap.xml").write_text(
+    '<?xml version="1.0" encoding="UTF-8"?>' + chr(10)
+    + '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + chr(10)
+    + "".join(f"  <url>{chr(10)}    <loc>{u}</loc>{chr(10)}    <lastmod>{d}</lastmod>{chr(10)}  </url>{chr(10)}" for u, d in SITEMAP)
+    + "</urlset>" + chr(10),
+    encoding="utf-8",
+)
+
 # ---- Deployable output -------------------------------------------------------
 # Vercel serves only public/. Copy the site files there, so src/, tools/,
 # tests/ and brand/ are never deployed. Functions live in api/ and deploy separately.
 import shutil
 
 OUT = ROOT / "public"
-PUBLISH = ["507185732f25fc5fcca8051716304648.txt", "index.html", "404.html", "cancel.html", "privacy.html", "llms.txt", "robots.txt", "sitemap.xml", "favicon.ico", "assets", ".well-known"]
+PUBLISH = ["507185732f25fc5fcca8051716304648.txt", "index.html", "404.html", "cancel.html", "privacy.html", "llms.txt", "robots.txt", "sitemap.xml", "blog", "favicon.ico", "assets", ".well-known"]
 if OUT.exists():
     shutil.rmtree(OUT)
 OUT.mkdir()
@@ -228,6 +247,7 @@ for name in PUBLISH:
 llms = (ROOT / "llms.txt").read_text(encoding="utf-8").rstrip() + "\n\n## Frequently Asked Questions\n"
 for f in faq:
     llms += f"\n### {f['q']}\n\n{f['a']}\n"
+llms += blog_llms
 llms += f"\n---\nLast updated: {TODAY}\n"
 (OUT / "llms.txt").write_text(llms, encoding="utf-8")
 
