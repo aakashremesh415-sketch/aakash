@@ -83,17 +83,18 @@ into `public/`, which Vercel serves; `src/`, `tools/`, `tests/` and `brand/` are
 1. Vercel → **Add New → Project** → import this repo. Framework preset **Other**. Build
    command and output directory come from `vercel.json`, so leave them as they are.
 2. **Storage → Create → Blob**, choose **Private**, and connect it to this project. This adds
-   `BLOB_READ_WRITE_TOKEN` automatically. Bookings are stored there as time-slot markers
-   only; names and emails are never stored, they only travel in the emails.
+   `BLOB_READ_WRITE_TOKEN` automatically. Bookings are stored there as time-slot markers,
+   plus an encrypted contact record (name, email, company) that powers the reminder and
+   cancel link and is deleted after the call.
 3. **Settings → Environment Variables**, add (for Production and Preview):
 
    | Variable | Example | Notes |
    |---|---|---|
-   | `SMTP_HOST` | `smtp.titan.email` | Titan Email (GoDaddy) outgoing server |
-   | `SMTP_PORT` | `465` | 465 (SSL/TLS) for Titan; 587 (STARTTLS) also works |
-   | `SMTP_USER` | `hello@aakashremesh.com` | Your full Titan email address |
-   | `SMTP_PASS` | *mailbox password* | The Titan mailbox password; store it only in Vercel |
-   | `MAIL_FROM` | `Aakash Remesh <hello@aakashremesh.com>` | Must be the same Titan address as `SMTP_USER` |
+   | `SMTP_HOST` | `smtpout.secureserver.net` | GoDaddy email outgoing server (the domain's mail is GoDaddy, not Titan: `smtp.titan.email` rejects the login with 535) |
+   | `SMTP_PORT` | `465` | 465 (SSL/TLS); 587 (STARTTLS) also works |
+   | `SMTP_USER` | `info@aakashremesh.com` | The full mailbox address |
+   | `SMTP_PASS` | *mailbox password* | The email password used at GoDaddy's email login; store it only in Vercel |
+   | `MAIL_FROM` | `Aakash Remesh <info@aakashremesh.com>` | A real address (not a variable name), the same mailbox as `SMTP_USER` |
    | `OWNER_EMAIL` | `you@example.com` | Where bookings and messages arrive. Never sent to browsers |
    | `MEETING_URL` | `https://meet.google.com/abc-defg-hij` | Fixed video link: used when per-call links aren't set up, or as the backup if Google can't be reached |
 
@@ -192,22 +193,19 @@ If Teams can't be reached when someone books, the booking still goes through wit
 `MEETING_URL`, and the error appears in Vercel's function logs. Renew the client secret
 before it expires.
 
-### Email deliverability (Titan: SPF, DKIM, DMARC)
+### Email deliverability (GoDaddy: SPF, DKIM, DMARC)
 
-Add these DNS records wherever `aakashremesh.com`'s DNS is hosted: **Vercel → Domains**
-if you pointed the nameservers to Vercel, otherwise **GoDaddy → My Products → DNS**.
+The domain's email is hosted by GoDaddy, which manages these DNS records (GoDaddy → My
+Products → DNS). As of 11 Nov 2026 they are in place:
 
 | Type | Name | Value |
 |---|---|---|
-| MX | `@` | `mx1.titan.email` (priority 10) |
-| MX | `@` | `mx2.titan.email` (priority 20) |
-| TXT | `@` | `v=spf1 include:spf.titan.email ~all` |
-| TXT | *selector from Titan*, e.g. `titan1._domainkey` | *DKIM key from Titan* (`v=DKIM1; k=rsa; p=…`) |
-| TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:hello@aakashremesh.com; fo=1` |
+| MX | `@` | `smtp.secureserver.net` (0), `mailstore1.secureserver.net` (10) |
+| TXT | `@` | `v=spf1 include:spf.em.secureserver.net include:secureserver.net ?all` |
+| TXT | `_dmarc` | `v=DMARC1; p=quarantine; adkim=r; aspf=r; rua=mailto:dmarc_rua@onsecureserver.net;` |
 
-Only one SPF record is allowed; if one exists, add `include:spf.titan.email` to it.
-Copy the DKIM name and value exactly from Titan's admin panel. After two to four weeks of
-clean DMARC reports, tighten DMARC to `p=quarantine`, then `p=reject`.
+Only one SPF record is allowed. If you ever switch email providers, update SMTP_HOST and
+these records together, then test a login before redeploying.
 
 ### How booking works
 
