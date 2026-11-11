@@ -81,9 +81,9 @@ Book a free call from this page and walk me through your books and what isn't wo
 
 Plain-English accounting explainers by Shreeya:
 
-- [Why doesn't your Shopify payout match your sales?](https://www.shreeyamundade.com/blog/why-shopify-payout-doesnt-match-sales): Shopify and Amazon payouts never match sales because fees, refunds and reserves come out first. Five steps, from a clearing account to A2X, make every dollar tie out.
-- [Do your Sage Intacct reports ever disagree?](https://www.shreeyamundade.com/blog/why-sage-intacct-reports-disagree): When Sage Intacct reports tell different stories, the cause is usually dimension sprawl: missing departments, duplicate locations and untagged lines. Five steps fix it for good.
-- [Still doing your bookkeeping once a year?](https://www.shreeyamundade.com/blog/month-end-close-in-six-levels): A shoebox of receipts every April isn't bookkeeping. A real month-end close has six levels: bank feeds, categorizing, reconciliations, accruals, amortization and P&L analysis.
+- [Why your Shopify payout doesn't match your sales](https://www.shreeyamundade.com/blog/why-shopify-payout-doesnt-match-sales): Shopify and Amazon payouts never match sales because fees, refunds and reserves come out first. Five steps, from a clearing account to A2X, make every dollar tie out.
+- [Why your Sage Intacct reports disagree](https://www.shreeyamundade.com/blog/why-sage-intacct-reports-disagree): When Sage Intacct reports tell different stories, the cause is usually dimension sprawl: missing departments, duplicate locations and untagged lines. Five steps fix it for good.
+- [The month-end close, step by step](https://www.shreeyamundade.com/blog/month-end-close-in-six-levels): Catching up on the books once a year, at tax time, isn't bookkeeping. A proper month-end close has six steps: bank feeds, categorizing, reconciliations, accruals, amortization and P&L analysis.
 
 ---
 Last updated: 2026-11-12
