@@ -136,6 +136,7 @@ def build_home(P, e, ext, head, graph, parts):
         <ol>
 {nav}
         </ol>
+        <a class="side__blog" href="/blog">Blog <span aria-hidden="true">→</span></a>
       </nav>
       <p class="side__meta">{e(P['renocrewRole'])}, Renocrew Solutions · {e(P['location']['label'])}, working remotely with clients worldwide.</p>
     </div>
@@ -179,6 +180,7 @@ def build_home(P, e, ext, head, graph, parts):
         <span class="foot-simple__links">
           <a href="{e(P['linkedinUrl'])}" target="_blank" rel="noopener noreferrer me">LinkedIn<span class="sr-only"> (opens in a new tab)</span></a>
           <a href="{e(P['upworkUrl'])}" target="_blank" rel="noopener noreferrer me">Upwork<span class="sr-only"> (opens in a new tab)</span></a>
+          <a href="/blog">Blog</a>
           <a href="/privacy">Privacy</a>
           <a href="#main">Back to Top</a>
         </span>
