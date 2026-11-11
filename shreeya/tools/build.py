@@ -30,8 +30,15 @@ def ext(href, label, cls="", me=False):
     return f'<a href="{e(href)}"{c} target="_blank" rel="{rel}">{label} <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>'
 
 
-def head(title, desc, path, *, robots="index, follow, max-image-preview:large", og=True, jsonld=None):
+PROFILE_META = f"""  <meta property="profile:first_name" content="{e(P['givenName'])}">
+  <meta property="profile:last_name" content="{e(P['familyName'])}">
+"""
+
+
+def head(title, desc, path, *, robots="index, follow, max-image-preview:large", og=True, jsonld=None, og_type="profile", og_title=None, og_desc=None):
     url = f"{SITE}{path}"
+    og_title = og_title or P["ogTitle"]
+    og_desc = og_desc or P["ogDescription"]
     meta = f"""<!doctype html>
 <html lang="en">
 <head>
@@ -53,21 +60,19 @@ def head(title, desc, path, *, robots="index, follow, max-image-preview:large", 
   <link rel="stylesheet" href="/assets/styles.css">
 """
     if og:
-        meta += f"""  <meta property="og:type" content="profile">
+        meta += f"""  <meta property="og:type" content="{og_type}">
   <meta property="og:site_name" content="{e(FULL)}">
   <meta property="og:locale" content="en_US">
   <meta property="og:url" content="{url}">
-  <meta property="og:title" content="{e(P['ogTitle'])}">
-  <meta property="og:description" content="{e(P['ogDescription'])}">
+  <meta property="og:title" content="{e(og_title)}">
+  <meta property="og:description" content="{e(og_desc)}">
   <meta property="og:image" content="{SITE}/assets/img/og-card.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="{e(FULL)}, Chartered Accountant: illustrated portrait beside her name">
-  <meta property="profile:first_name" content="{e(P['givenName'])}">
-  <meta property="profile:last_name" content="{e(P['familyName'])}">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{e(P['ogTitle'])}">
-  <meta name="twitter:description" content="{e(P['ogDescription'])}">
+{PROFILE_META if og_type == "profile" else ""}  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{e(og_title)}">
+  <meta name="twitter:description" content="{e(og_desc)}">
   <meta name="twitter:image" content="{SITE}/assets/img/og-card.jpg">
   <link rel="alternate" type="text/markdown" href="/llms.txt" title="Summary for AI assistants">
 """
@@ -83,7 +88,7 @@ NAV = [("#services", "Services"), ("#feedback", "Reviews"), ("#experience", "Exp
 
 def header(home=True):
     pre = "" if home else "/"
-    links = "\n".join(f'          <a href="{pre}{h}">{t}</a>' for h, t in NAV)
+    links = "\n".join(f'          <a href="{pre}{h}">{t}</a>' for h, t in NAV) + '\n          <a href="/blog">Blog</a>'
     return f"""  <a class="skip" href="#main">Skip to content</a>
   <div class="progress" aria-hidden="true"></div>
   <header class="site-header">
@@ -115,6 +120,7 @@ def footer(home=True):
             <li><a href="{pre}#services">Services</a></li>
             <li><a href="{pre}#feedback">Reviews</a></li>
             <li><a href="{pre}#faq">FAQ</a></li>
+            <li><a href="/blog">Blog</a></li>
             <li><a href="{pre}#contact">Book a Call</a></li>
             <li><a href="/privacy">Privacy</a></li>
           </ul>
@@ -336,7 +342,16 @@ Disallow: /cancel
 Sitemap: {SITE}/sitemap.xml
 """, encoding="utf-8")
 
-sitemap = [(f"{SITE}/", TODAY), (f"{SITE}/privacy", P["updated"])]
+# ---------------------------------------------------------------- blog
+import blog
+
+blog_urls, blog_llms = blog.build(
+    ROOT, SITE, PERSON_ID, FULL,
+    lambda t, d, path, jsonld: head(t, d, path, jsonld=jsonld, og_type="website" if path == "/blog" else "article", og_title=t.split(" — ")[0], og_desc=d),
+    header, footer,
+)
+
+sitemap = [(f"{SITE}/", TODAY), (f"{SITE}/privacy", P["updated"])] + blog_urls
 (ROOT / "sitemap.xml").write_text(
     '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     + "".join(f"  <url>\n    <loc>{u}</loc>\n    <lastmod>{d}</lastmod>\n  </url>\n" for u, d in sitemap)
@@ -371,12 +386,12 @@ Book a call: {SITE}/#contact
 Languages: {', '.join(P['languages'])}.
 
 ## Frequently Asked Questions
-""" + "".join(f"\n### {f['q']}\n\n{f['a']}\n" for f in P["faqs"]) + f"\n---\nLast updated: {TODAY}\n"
+""" + "".join(f"\n### {f['q']}\n\n{f['a']}\n" for f in P["faqs"]) + blog_llms + f"\n---\nLast updated: {TODAY}\n"
 (ROOT / "llms.txt").write_text(llms, encoding="utf-8")
 
 # ---------------------------------------------------------------- deployable output
 # Vercel serves only public/; functions in api/ deploy separately.
-PUBLISH = [f"{INDEXNOW_KEY}.txt", "index.html", "404.html", "cancel.html", "privacy.html", "llms.txt", "robots.txt", "sitemap.xml", "favicon.ico", "assets"]
+PUBLISH = [f"{INDEXNOW_KEY}.txt", "index.html", "404.html", "cancel.html", "privacy.html", "llms.txt", "robots.txt", "sitemap.xml", "blog", "favicon.ico", "assets"]
 if OUT.exists():
     shutil.rmtree(OUT)
 OUT.mkdir()

@@ -606,3 +606,30 @@ section { padding: 96px 0; }
 }
 @media (prefers-reduced-motion: reduce) { .mbar { transition: none; } }
 .look img { transition: none; } .look { transition: transform .45s cubic-bezier(.2, .7, .2, 1); }
+
+/* ===== Blog (/blog, /blog/<slug>) ===== */
+.side__blog { display: inline-flex; align-items: center; gap: .4rem; min-height: 30px; margin-top: .5rem; font-size: .9rem; font-weight: 600; color: var(--side-accent); }
+.side__blog:hover { color: var(--side-ink); }
+.blog__index, .blog__post { max-width: 46rem; margin: 0 auto; padding: 3rem 20px 5rem; }
+.blog__index { max-width: var(--max); }
+.blog h1 { font-size: clamp(2rem, 5vw, 2.8rem); margin: .2rem 0 1rem; }
+.blog__lede { font-size: 1.1rem; color: var(--ink-2); line-height: 1.6; max-width: 44rem; }
+.blog__crumbs a { color: var(--brand); font-weight: 600; display: inline-flex; min-height: 44px; align-items: center; }
+.blog__body { margin-top: 2rem; }
+.blog__body h2 { font-size: 1.35rem; margin: 2.2rem 0 .6rem; }
+.blog__body p, .blog__body li { color: var(--ink-2); line-height: 1.75; }
+.blog__body p + p { margin-top: .9rem; }
+.blog__body ul, .blog__body ol { padding-left: 1.2rem; margin-top: .6rem; display: grid; gap: .35rem; }
+.blog__body a { color: var(--brand); text-decoration: underline; }
+.blog__body strong { color: var(--ink); }
+.blog__cta { margin-top: 3rem; padding: 28px; border-radius: var(--radius); background: var(--bg-2); border: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; align-items: center; justify-content: space-between; }
+.blog__cta p { color: var(--ink); font-weight: 600; margin: 0; flex: 1 1 18rem; }
+.bgrid { list-style: none; padding: 0; margin-top: 2.5rem; display: grid; gap: 22px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+.bcard { padding: 0; overflow: hidden; }
+.bcard a { display: flex; flex-direction: column; gap: .55rem; height: 100%; padding: 28px; color: inherit; text-decoration: none; }
+.bcard__kicker { align-self: flex-start; font-family: var(--font-head); font-weight: 700; font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--brand); background: var(--brand-soft); padding: 6px 12px; border-radius: 999px; }
+.bcard__meta { font-size: .85rem; color: var(--muted); }
+.bcard__title { font-family: var(--font-head); font-weight: 700; font-size: 1.25rem; line-height: 1.25; color: var(--ink); letter-spacing: -.01em; }
+.bcard__desc { color: var(--muted); line-height: 1.6; flex: 1; }
+.bcard__more { font-weight: 600; color: var(--brand); margin-top: .4rem; }
+.bcard a:hover .bcard__title, .bcard a:focus-visible .bcard__title { color: var(--brand); }
