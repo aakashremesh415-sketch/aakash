@@ -1,0 +1,319 @@
+// Run: npm test   (uses node:test; no Netlify account or real mailbox needed)
+import { test, before, after } from "node:test";
+import assert from "node:assert/strict";
+
+process.env.SMTP_HOST = "127.0.0.1";
+process.env.MAIL_FROM = "Sanskar Mittal <hello@sanskarmittal.com>";
+process.env.OWNER_EMAIL = "owner@example.com";
+process.env.MEETING_URL = "https://meet.example.com/sanskar";
+process.env.MS_TENANT_ID = "tenant-123";
+process.env.MS_CLIENT_ID = "client-abc";
+process.env.MS_CLIENT_SECRET = "secret";
+process.env.MS_ORGANIZER = "sanskar@example.onmicrosoft.com";
+
+const { BOOKING } = await import("../api/_lib/config.js");
+const { generateSlots, isOfferedSlot } = await import("../api/_lib/slots.js");
+const { buildIcs } = await import("../api/_lib/ics.js");
+const store = await import("../api/_lib/store.js");
+const mail = await import("../api/_lib/mail.js");
+const teams = await import("../api/_lib/teams.js");
+
+// Fake Microsoft Graph: token endpoint + events endpoint.
+let graph = { calls: [], fail: false, n: 0 };
+const fakeFetch = async (url, init = {}) => {
+  graph.calls.push({ url: String(url), method: init.method || "GET", body: init.body });
+  const reply = (status, obj) => new Response(JSON.stringify(obj), { status, headers: { "content-type": "application/json" } });
+  if (String(url).includes("login.microsoftonline.com")) return reply(200, { access_token: "tok", expires_in: 3600 });
+  if (init.method === "DELETE") return new Response(null, { status: 204 });
+  if (graph.fail) return reply(503, { error: { code: "ServiceUnavailable" } });
+  graph.n += 1;
+  return reply(201, { id: `evt-${graph.n}`, onlineMeeting: { joinUrl: `https://teams.microsoft.com/l/meetup-join/meeting-${graph.n}` } });
+};
+teams.useFetch(fakeFetch);
+const slotsFn = (await import("../api/slots.js")).GET;
+const bookFn = (await import("../api/book.js")).POST;
+const messageFn = (await import("../api/message.js")).POST;
+
+let sent = [];
+let failOwner = false;
+before(() => {
+  mail.useTransport({
+    async sendMail(m) {
+      if (failOwner && m.to.address === "owner@example.com") throw new Error("smtp down");
+      sent.push(m);
+      return { messageId: "x" };
+    },
+  });
+});
+const reset = () => { sent = []; failOwner = false; graph = { calls: [], fail: false, n: 0 }; teams.useFetch(fakeFetch); store.useStore(store.memoryStore()); };
+
+let ipN = 0;
+const req = (path, body, { origin = "https://sanskarmittal.com", method = "POST" } = {}) =>
+  new Request(`https://sanskarmittal.com${path}`, {
+    method,
+    headers: { "content-type": "application/json", origin, "x-real-ip": `10.0.0.${++ipN}` },
+    body: method === "POST" ? JSON.stringify(body) : undefined,
+  });
+
+const human = { elapsedMs: 9000, website: "" };
+async function firstSlot() {
+  const res = await slotsFn(new Request("https://sanskarmittal.com/api/slots"));
+  const data = await res.json();
+  return data.slots[0];
+}
+
+// ---- Slot generation ----------------------------------------------------------
+
+test("nothing is bookable today or tomorrow; the first day is two days out (IST)", () => {
+  const now = new Date("2026-10-07T05:00:00Z"); // Wednesday 10:30 IST
+  const slots = generateSlots([], now);
+  const istDay = (d) => new Date(d.getTime() + 5.5 * 3600_000).toISOString().slice(0, 10);
+  assert.equal(istDay(slots[0]), "2026-10-09"); // Friday
+  assert.ok(!slots.some((s) => ["2026-10-07", "2026-10-08"].includes(istDay(s))));
+});
+
+// IST wall clock of a slot, counting 00:00-01:00 as the end of the previous evening's window.
+const istWindowTime = (s) => {
+  const ist = new Date(s.getTime() + 5.5 * 3600_000);
+  let mins = ist.getUTCHours() * 60 + ist.getUTCMinutes();
+  let day = ist.getUTCDay();
+  if (mins < 6 * 60) { mins += 1440; day = (day + 6) % 7; }
+  return { mins, day };
+};
+const etParts = (s) => Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short", hour: "numeric", hourCycle: "h23" })
+  .formatToParts(s).map((p) => [p.type, p.value]));
+
+test("the default window is 5 PM to 1 AM IST, Monday to Friday evenings", () => {
+  assert.deepEqual(BOOKING.windows, [[17 * 60, 25 * 60]]);
+  assert.equal(BOOKING.displayTimeZone, "America/New_York");
+});
+
+test("no window starts on an IST weekend, and no slot falls on a US Eastern weekend", () => {
+  const slots = generateSlots([], new Date("2026-10-07T05:00:00Z"));
+  for (const s of slots) {
+    const { day } = istWindowTime(s);
+    assert.ok(day >= 1 && day <= 5, `weekend window ${s.toISOString()}`);
+    assert.ok(!["Sat", "Sun"].includes(etParts(s).weekday), `US weekend slot ${s.toISOString()}`);
+  }
+});
+
+test("slots fall inside 5 PM-1 AM IST, after the notice period", () => {
+  const now = new Date("2026-10-07T00:00:00Z"); // Wednesday
+  const slots = generateSlots([], now);
+  assert.ok(slots.length > 50);
+  for (const s of slots) {
+    const { mins } = istWindowTime(s);
+    assert.ok(mins >= 17 * 60 && mins + BOOKING.durationMin <= 25 * 60, `slot ${s.toISOString()} outside 17:00-01:00 IST`);
+    assert.ok(s - now >= BOOKING.minNoticeHours * 3600_000, "inside notice period");
+  }
+  // In US Eastern daylight time that is 7:30 AM to 3:30 PM.
+  const hours = slots.map((s) => Number(etParts(s).hour));
+  assert.equal(Math.min(...hours), 7);
+  assert.equal(Math.max(...hours), 15);
+  // The last slot of a Friday evening (00:30 IST Saturday) is still offered.
+  assert.ok(slots.some((s) => s.toISOString() === "2026-10-09T19:00:00.000Z"), "Friday 00:30 IST slot");
+});
+
+test("the visitor's email repeats the time in US Eastern when they are elsewhere", async () => {
+  reset();
+  const start = await firstSlot();
+  await bookFn(req("/api/book", { ...human, fullName: "A", email: "a@a.com", company: "A", start, timeZone: "Asia/Kolkata" }));
+  assert.match(sent[1].text, /US Eastern: .*E[DS]T/);
+  assert.match(sent[0].text, /US Eastern: /);
+});
+
+// ---- ICS ---------------------------------------------------------------------
+
+test("calendar invite escapes text and can't be broken by names", () => {
+  const ics = buildIcs({
+    uid: "u@x", start: new Date("2026-10-12T05:00:00Z"), end: new Date("2026-10-12T05:20:00Z"),
+    summary: "Call: Acme, Inc; Ltd", description: "line1\nline2",
+    organizer: { name: "Sanskar", email: "a@x.com" },
+    attendees: [{ name: 'Eve"\r\nATTENDEE:mailto:evil@x.com', email: "e@x.com" }],
+  });
+  assert.match(ics, /SUMMARY:Call: Acme\\, Inc\\; Ltd/);
+  assert.match(ics, /DESCRIPTION:line1\\nline2/);
+  assert.doesNotMatch(ics, /\r\nATTENDEE:mailto:evil/);
+  for (const line of ics.split("\r\n")) assert.ok(Buffer.byteLength(line) <= 75, `long line: ${line}`);
+});
+
+// ---- Booking endpoint ----------------------------------------------------------
+
+test("happy path: reserves, emails owner first, then the visitor with an invite", async () => {
+  reset();
+  const start = await firstSlot();
+  const res = await bookFn(req("/api/book", { ...human, fullName: "Jane Doe", email: "Jane@Acme.com", company: "Acme", notes: "QBO cleanup", start, timeZone: "America/New_York" }));
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.ok, true);
+  assert.equal(body.booking.start, start);
+  assert.equal(sent.length, 2);
+  assert.equal(sent[0].to.address, "owner@example.com");
+  assert.equal(sent[0].replyTo.address, "jane@acme.com");
+  assert.equal(sent[1].to.address, "jane@acme.com");
+  assert.match(sent[1].icalEvent.content, /BEGIN:VEVENT/);
+  assert.match(sent[1].text, /EDT|EST|GMT-4|GMT-5/);
+  // The slot is gone from the public list.
+  const after = await (await slotsFn(new Request("https://sanskarmittal.com/api/slots"))).json();
+  assert.ok(!after.slots.includes(start));
+  // The owner's address never appears in what the browser receives.
+  assert.doesNotMatch(JSON.stringify(after) + JSON.stringify(body), /owner@example\.com/);
+});
+
+test("the same slot can't be booked twice", async () => {
+  reset();
+  const start = await firstSlot();
+  const a = await bookFn(req("/api/book", { ...human, fullName: "A", email: "a@a.com", company: "A", start, timeZone: "UTC" }));
+  const b = await bookFn(req("/api/book", { ...human, fullName: "B", email: "b@b.com", company: "B", start, timeZone: "UTC" }));
+  assert.equal(a.status, 200);
+  assert.equal(b.status, 409);
+});
+
+test("concurrent requests for one slot: exactly one wins", async () => {
+  reset();
+  const start = await firstSlot();
+  const results = await Promise.all([1, 2, 3, 4].map((i) =>
+    bookFn(req("/api/book", { ...human, fullName: `P${i}`, email: `p${i}@x.com`, company: "X", start, timeZone: "UTC" }))));
+  assert.equal(results.filter((r) => r.status === 200).length, 1);
+});
+
+test("a time that isn't offered is rejected", async () => {
+  reset();
+  const res = await bookFn(req("/api/book", { ...human, fullName: "A", email: "a@a.com", company: "A", start: "2026-10-11T03:07:00Z", timeZone: "UTC" }));
+  assert.equal(res.status, 409);
+});
+
+test("if the owner can't be emailed, the slot is released and the visitor is told", async () => {
+  reset();
+  failOwner = true;
+  const start = await firstSlot();
+  const res = await bookFn(req("/api/book", { ...human, fullName: "A", email: "a@a.com", company: "A", start, timeZone: "UTC" }));
+  assert.equal(res.status, 502);
+  failOwner = false;
+  const again = await bookFn(req("/api/book", { ...human, fullName: "B", email: "b@b.com", company: "B", start, timeZone: "UTC" }));
+  assert.equal(again.status, 200);
+});
+
+test("one address can hold at most two upcoming calls", async () => {
+  reset();
+  const { slots } = await (await slotsFn(new Request("https://sanskarmittal.com/api/slots"))).json();
+  const codes = [];
+  for (const s of [slots[0], slots[5], slots[10]]) {
+    codes.push((await bookFn(req("/api/book", { ...human, fullName: "A", email: "same@x.com", company: "A", start: s, timeZone: "UTC" }))).status);
+  }
+  assert.deepEqual(codes, [200, 200, 409]);
+});
+
+test("bots get a silent fake success and nothing is sent", async () => {
+  reset();
+  const start = await firstSlot();
+  const honeypot = await bookFn(req("/api/book", { elapsedMs: 9000, website: "spam.com", fullName: "A", email: "a@a.com", company: "A", start, timeZone: "UTC" }));
+  const tooFast = await bookFn(req("/api/book", { elapsedMs: 300, website: "", fullName: "A", email: "a@a.com", company: "A", start, timeZone: "UTC" }));
+  assert.equal(honeypot.status, 200);
+  assert.equal(tooFast.status, 200);
+  assert.equal(sent.length, 0);
+});
+
+test("cross-site posts are refused", async () => {
+  reset();
+  const res = await bookFn(req("/api/book", { ...human }, { origin: "https://evil.example" }));
+  assert.equal(res.status, 403);
+});
+
+test("header injection through the name is neutralised", async () => {
+  reset();
+  const start = await firstSlot();
+  await bookFn(req("/api/book", { ...human, fullName: "Eve\r\nBcc: victim@x.com", email: "eve@x.com", company: "E", start, timeZone: "UTC" }));
+  for (const m of sent) {
+    assert.doesNotMatch(m.subject, /[\r\n]/);
+    assert.doesNotMatch(JSON.stringify(m.to) + JSON.stringify(m.replyTo || {}), /\\r|\\n/);
+  }
+});
+
+test("missing fields and bad emails are rejected", async () => {
+  reset();
+  const start = await firstSlot();
+  const r1 = await bookFn(req("/api/book", { ...human, fullName: "", email: "a@a.com", company: "A", start }));
+  const r2 = await bookFn(req("/api/book", { ...human, fullName: "A", email: "not-an-email", company: "A", start }));
+  assert.equal(r1.status, 400);
+  assert.equal(r2.status, 400);
+});
+
+test("rate limit kicks in for one IP", async () => {
+  reset();
+  const make = () => new Request("https://sanskarmittal.com/api/book", {
+    method: "POST", headers: { "content-type": "application/json", origin: "https://sanskarmittal.com", "x-real-ip": "9.9.9.9" },
+    body: JSON.stringify({ ...human }),
+  });
+  const codes = [];
+  for (let i = 0; i < 7; i++) codes.push((await bookFn(make())).status);
+  assert.ok(codes.includes(429));
+});
+
+// ---- Message endpoint -----------------------------------------------------------
+
+test("contact message goes only to the owner, reply-to the sender, HTML-escaped", async () => {
+  reset();
+  const res = await messageFn(req("/api/message", { ...human, fullName: "Sam", email: "sam@x.com", company: "", message: "<script>alert(1)</script>\nHello" }));
+  assert.equal(res.status, 200);
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].to.address, "owner@example.com");
+  assert.equal(sent[0].replyTo.address, "sam@x.com");
+  assert.doesNotMatch(sent[0].html, /<script>/);
+});
+
+test("without mail settings the endpoints say they're unavailable", async () => {
+  const saved = process.env.OWNER_EMAIL;
+  // config is read at import time, so check the guard function directly.
+  const { mailConfigured, MAIL } = await import("../api/_lib/config.js");
+  const keep = MAIL.owner;
+  MAIL.owner = "";
+  assert.equal(mailConfigured(), false);
+  const res = await slotsFn(new Request("https://sanskarmittal.com/api/slots"));
+  assert.equal(res.status, 503);
+  MAIL.owner = keep;
+  process.env.OWNER_EMAIL = saved;
+});
+
+// ---- Teams meetings -------------------------------------------------------------
+
+test("each booking gets its own Teams link in both emails and the invite", async () => {
+  reset();
+  const { slots } = await (await slotsFn(new Request("https://sanskarmittal.com/api/slots"))).json();
+  await bookFn(req("/api/book", { ...human, fullName: "A", email: "a@a.com", company: "A", start: slots[0], timeZone: "UTC" }));
+  await bookFn(req("/api/book", { ...human, fullName: "B", email: "b@b.com", company: "B", start: slots[4], timeZone: "UTC" }));
+  const links = sent.map((m) => (m.text.match(/https:\/\/teams\.microsoft\.com\S+/) || [])[0]);
+  assert.deepEqual(links, [
+    "https://teams.microsoft.com/l/meetup-join/meeting-1", "https://teams.microsoft.com/l/meetup-join/meeting-1",
+    "https://teams.microsoft.com/l/meetup-join/meeting-2", "https://teams.microsoft.com/l/meetup-join/meeting-2",
+  ]);
+  assert.match(sent[1].icalEvent.content, /URL:https:\/\/teams\.microsoft\.com\/l\/meetup-join\/meeting-1/);
+  assert.match(sent[1].html, /Join the Teams Meeting/);
+  const create = graph.calls.find((c) => c.method === "POST" && c.url.includes("/events"));
+  const body = JSON.parse(create.body);
+  assert.equal(body.isOnlineMeeting, true);
+  assert.equal(body.onlineMeetingProvider, "teamsForBusiness");
+  assert.equal(body.attendees, undefined, "no Outlook invite should be sent by Graph");
+  assert.ok(create.url.includes(encodeURIComponent("sanskar@example.onmicrosoft.com")));
+  // The access token is fetched once and reused.
+  assert.equal(graph.calls.filter((c) => c.url.includes("login.microsoftonline.com")).length, 1);
+});
+
+test("if Teams is down the booking still succeeds with the fallback link", async () => {
+  reset();
+  graph.fail = true;
+  const start = await firstSlot();
+  const res = await bookFn(req("/api/book", { ...human, fullName: "A", email: "a@a.com", company: "A", start, timeZone: "UTC" }));
+  assert.equal(res.status, 200);
+  assert.match(sent[1].text, /Join: https:\/\/meet\.example\.com\/sanskar/);
+  assert.doesNotMatch(sent[1].html, /Teams Meeting/);
+});
+
+test("a rolled-back booking also deletes its Teams meeting", async () => {
+  reset();
+  failOwner = true;
+  const start = await firstSlot();
+  const res = await bookFn(req("/api/book", { ...human, fullName: "A", email: "a@a.com", company: "A", start, timeZone: "UTC" }));
+  assert.equal(res.status, 502);
+  assert.ok(graph.calls.some((c) => c.method === "DELETE" && c.url.endsWith("/events/evt-1")));
+});

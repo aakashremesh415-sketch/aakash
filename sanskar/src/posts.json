@@ -1,0 +1,26 @@
+[
+ {
+  "slug": "mis-reports-founders-should-read",
+  "title": "The MIS reports every founder should read each month",
+  "seo_title": "5 monthly MIS reports every founder should read",
+  "description": "Five short reports that tell you more about the health of your business than a full set of financial statements.",
+  "kicker": "5 reports",
+  "date": "2026-09-08",
+  "cta": "Want an MIS pack like this for your business, ready on the same day every month?",
+  "body": [
+   "Financial statements are built for lenders, investors and tax. Founders need something shorter: a monthly pack that shows what changed, why, and what needs a decision. A good MIS pack fits on a few pages and is read in fifteen minutes.",
+   "## 1. Cash position and runway",
+   "Cash at month end, cash burned or generated during the month, and how many months the current balance lasts at the recent average. This is the first page for a reason.",
+   "## 2. Revenue by line or channel",
+   "Revenue split the way you actually run the business, by product, service line, region or sales channel, compared with last month and with budget.",
+   "## 3. Gross margin trend",
+   "Margin by line over the last six to twelve months. A slow slide in margin is easy to miss in a single month and expensive to discover late.",
+   "## 4. Receivables and payables aging",
+   "Who owes you money and for how long, and what you owe. Overdue receivables are often the quickest cash improvement available.",
+   "## 5. Cost movements that need an explanation",
+   "A short list of expense lines that moved more than an agreed threshold, each with a one-line reason. It keeps the conversation on exceptions instead of every number.",
+   "**If a report doesn't lead to a question or a decision, it doesn't belong in the monthly pack.**",
+   "Tools like Power BI or Zoho Analytics can refresh these reports automatically from your accounting system, so the pack is ready on the same day every month."
+  ]
+ }
+]
