@@ -6,13 +6,13 @@
   "trailingSlash": false,
   "redirects": [
     {
-      "source": "/:path*",
+      "source": "/(.*)",
       "has": [{ "type": "host", "value": "linkedin.shreeyamundade.com" }],
       "destination": "https://www.linkedin.com/in/shreeyamundade/",
       "permanent": false
     },
     {
-      "source": "/:path*",
+      "source": "/(.*)",
       "has": [{ "type": "host", "value": "upwork.shreeyamundade.com" }],
       "destination": "https://www.upwork.com/freelancers/shreeyamundade",
       "permanent": false
