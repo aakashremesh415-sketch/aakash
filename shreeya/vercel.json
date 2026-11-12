@@ -4,6 +4,14 @@
   "outputDirectory": "public",
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "linkedin.shreeyamundade.com" }],
+      "destination": "https://www.linkedin.com/in/shreeyamundade/",
+      "permanent": false
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
