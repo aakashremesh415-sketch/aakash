@@ -81,6 +81,18 @@ export function bookingIcs(b, { method = "REQUEST", sequence = 0 } = {}) {
   });
 }
 
+// When the call is a real event in the owner's Google/Outlook calendar, the owner needs no .ics, and
+// once the visitor is a guest on it the provider sends them a proper invitation (and later any
+// cancellation), which Gmail, Outlook and others add to their calendar. The .ics is only the fallback.
+const ownerIcs = (b, content, filename = "invite.ics", method = "REQUEST") =>
+  b.eventId ? {} : { icalEvent: { method, filename, content } };
+const visitorIcs = (b, content, filename = "invite.ics", method = "REQUEST") =>
+  b.guestInvited ? {} : { icalEvent: { method, filename, content } };
+const calendarApp = (b) => providerOf(b) === "Microsoft Teams" ? "Outlook" : "Google Calendar";
+const inviteText = (b) => b.guestInvited
+  ? `A calendar invitation from ${calendarApp(b)} is on its way to this address. It adds the call to your calendar (Gmail, Outlook and most others do this automatically).`
+  : "The calendar invite is attached.";
+
 const button = (href, label) =>
   `<p style="margin:16px 0"><a href="${escapeHtml(href)}" style="display:inline-block;background:#111216;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">${escapeHtml(label)}</a></p>`;
 const joinLabel = (b) => providerOf(b) === "Google Meet" ? "Join the Google Meet" : providerOf(b) === "Microsoft Teams" ? "Join the Teams Meeting" : "Join the Video Call";
@@ -102,6 +114,7 @@ export async function sendBookingToOwner(b) {
   if (prepLine(b)) rows.push(row("Setup", prepLine(b)));
   if (b.notes) rows.push(row("Notes", b.notes));
   if (joinUrl(b)) rows.push(row(providerOf(b) ? `${providerOf(b)} link` : "Video link", joinUrl(b)));
+  if (b.eventId) rows.push(row("Calendar", `Added to your ${calendarApp(b)}`));
   const t = await transport();
   return t.sendMail({
     from: fromAddress(),
@@ -110,7 +123,7 @@ export async function sendBookingToOwner(b) {
     subject: `New booking: ${b.fullName} (${b.company}), ${mins(b)} min, ${when(start, BOOKING.hostTimeZone)}`,
     text: `New ${mins(b)}-minute call booked.\n\nWhen (IST): ${when(start, BOOKING.hostTimeZone)}\nUS Eastern: ${when(start, BOOKING.displayTimeZone)}\nTheir time: ${when(start, b.clientTz)}\nName: ${b.fullName}\nEmail: ${b.email}\nCompany: ${b.company}\n${prepLine(b) ? `Setup: ${prepLine(b)}\n` : ""}${b.notes ? `Notes: ${b.notes}\n` : ""}${joinUrl(b) ? `Join: ${joinUrl(b)}\n` : ""}\nReply to this email to reach them.`,
     html: layout("New Booking", table(rows) + `<p style="margin:16px 0 0">Reply to this email to reach ${escapeHtml(b.fullName)}.</p>`),
-    icalEvent: { method: "REQUEST", filename: "invite.ics", content: bookingIcs(b) },
+    ...ownerIcs(b, bookingIcs(b)),
   });
 }
 
@@ -132,11 +145,11 @@ export async function sendBookingConfirmation(b) {
     to: { name: b.fullName, address: b.email },
     replyTo: owner(),
     subject: `Confirmed: ${mins(b)}-minute call with Aakash Remesh, ${theirs}`,
-    text: `Hi ${b.fullName},\n\nThanks for booking a ${mins(b)}-minute call.\n\nWhen: ${theirs}\n${eastern ? `US Eastern: ${eastern}\n` : ""}${joinUrl(b) ? `Join: ${joinUrl(b)}\n` : "I'll send the video link before the call.\n"}\nThe calendar invite is attached. ${changeText(b)}\n\nAakash Remesh\nhttps://aakashremesh.com`,
+    text: `Hi ${b.fullName},\n\nThanks for booking a ${mins(b)}-minute call.\n\nWhen: ${theirs}\n${eastern ? `US Eastern: ${eastern}\n` : ""}${joinUrl(b) ? `Join: ${joinUrl(b)}\n` : "I'll send the video link before the call.\n"}\n${inviteText(b)}\n\n${changeText(b)}\n\nAakash Remesh\nhttps://aakashremesh.com`,
     html: layout("Your Call Is Booked", `<p style="margin:0 0 12px">Hi ${escapeHtml(b.fullName)}, thanks for booking a ${mins(b)}-minute call.</p>` +
       table([row("When", theirs), ...(eastern ? [row("US Eastern", eastern)] : []), row("Length", `${mins(b)} minutes`), row("With", "Aakash Remesh")]) + link +
-      `<p style="margin:0 0 12px">The calendar invite is attached.</p>` + changeLine(b)),
-    icalEvent: { method: "REQUEST", filename: "invite.ics", content: bookingIcs(b) },
+      `<p style="margin:0 0 12px">${escapeHtml(inviteText(b))}</p>` + changeLine(b)),
+    ...visitorIcs(b, bookingIcs(b)),
   });
 }
 
@@ -156,7 +169,8 @@ export async function sendReminder(b) {
   });
 }
 
-/** Cancellation: tells Aakash, and sends the visitor a CANCEL invite so the event leaves their calendar. */
+/** Cancellation: tells Aakash, and takes the event out of the visitor's calendar (the provider's
+ * cancellation when they were invited through it, else a CANCEL .ics). */
 export async function sendCancellation(b, { rebooking = false } = {}) {
   const start = new Date(b.start);
   const t = await transport();
@@ -171,7 +185,7 @@ export async function sendCancellation(b, { rebooking = false } = {}) {
       text: `${b.fullName} (${b.company}) cancelled their ${mins(b)}-minute call on ${when(start, BOOKING.hostTimeZone)}.${rebooking ? " They're picking a new time." : ""}\nThe slot is open again.`,
       html: layout("Call Cancelled", table([row("When (IST)", when(start, BOOKING.hostTimeZone)), row("Name", b.fullName), row("Company", b.company), row("Email", b.email)]) +
         `<p style="margin:16px 0 0">${rebooking ? "They're picking a new time on the site. " : ""}The slot is open again.</p>`),
-      icalEvent: { method: "CANCEL", filename: "cancel.ics", content: cancelIcs },
+      ...ownerIcs(b, cancelIcs, "cancel.ics", "CANCEL"),
     }),
     t.sendMail({
       from: fromAddress(),
@@ -181,7 +195,7 @@ export async function sendCancellation(b, { rebooking = false } = {}) {
       text: `Hi ${b.fullName},\n\nYour call on ${theirs} is cancelled.${rebooking ? "" : ` You can book another time at ${BOOKING.siteUrl}/#contact`}\n\nAakash Remesh`,
       html: layout("Call Cancelled", `<p style="margin:0 0 12px">Hi ${escapeHtml(b.fullName)}, your call on ${escapeHtml(theirs)} is cancelled.</p>` +
         (rebooking ? "" : button(`${BOOKING.siteUrl}/#contact`, "Book another time"))),
-      icalEvent: { method: "CANCEL", filename: "cancel.ics", content: cancelIcs },
+      ...visitorIcs(b, cancelIcs, "cancel.ics", "CANCEL"),
     }),
   ]);
   for (const r of results) if (r.status === "rejected") console.error("[cancel] email failed", r.reason);

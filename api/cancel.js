@@ -34,7 +34,8 @@ async function handler(req) {
     await release(contact);
     if (contact.eventId) {
       const remove = contact.meetingProvider === "Microsoft Teams" ? deleteTeamsMeeting : deleteMeetMeeting;
-      await remove(contact.eventId).catch((err) => console.error("[cancel] couldn't delete the meeting", err));
+      // Takes it out of the owner's calendar and, if the visitor was invited, sends them the provider's cancellation.
+      await remove(contact.eventId, { notify: Boolean(contact.guestInvited) }).catch((err) => console.error("[cancel] couldn't delete the meeting", err));
     }
     await sendCancellation(contact, { rebooking: Boolean(body.rebooking) });
     return json(200, { ok: true, cancelled: true, booking: summary });

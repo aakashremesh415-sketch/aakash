@@ -3,8 +3,10 @@
 // (see README → "Teams meeting links"). When these variables aren't set, bookings
 // fall back to MEETING_URL.
 //
-// The meeting is created as an event in the organizer's own calendar with no attendees,
-// so Outlook sends no invite of its own; the visitor gets the site's invite with the link.
+// The meeting is created as an event in the organizer's own Outlook calendar with no attendees;
+// once the owner has been emailed, inviteGuest() adds the visitor and Outlook sends them a
+// calendar invitation that Gmail, Outlook and others add to their calendar (no .ics needed).
+import { BOOKING, MAIL } from "./config.js";
 
 const env = (k) => (process.env[k] ?? "").trim();
 
@@ -44,6 +46,12 @@ async function token() {
 }
 
 const graphUser = () => `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(TEAMS.organizer)}`;
+const site = () => BOOKING.siteUrl.replace(/^https?:\/\/(www\.)?/, "");
+const eventBody = (b) => ({
+  contentType: "text",
+  content: `Booked on ${site()} by ${b.fullName} (${b.email}), ${b.company}.${b.notes ? `\nNotes: ${b.notes}` : ""}` +
+    (b.cancelUrl ? `\n\nCancel or reschedule: ${b.cancelUrl}` : ""),
+});
 const graphTime = (iso) => ({ dateTime: new Date(iso).toISOString().replace("Z", ""), timeZone: "UTC" });
 
 /** Creates the Teams meeting for a booking. Returns { joinUrl, eventId }. */
@@ -52,8 +60,8 @@ export async function createTeamsMeeting(b) {
     method: "POST",
     headers: { Authorization: `Bearer ${await token()}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      subject: `Call with ${b.fullName} (${b.company})`,
-      body: { contentType: "text", content: `Booked on shreeyamundade.com by ${b.fullName} (${b.email}), ${b.company}.${b.notes ? `\nNotes: ${b.notes}` : ""}` },
+      subject: `${MAIL.ownerName} & ${b.fullName} (${b.company})`,
+      body: eventBody(b),
       start: graphTime(b.start),
       end: graphTime(b.end),
       isOnlineMeeting: true,
@@ -72,12 +80,35 @@ export async function createTeamsMeeting(b) {
   return { joinUrl, eventId: body.id };
 }
 
-/** Removes a meeting created for a booking that was then rolled back. */
-export async function deleteTeamsMeeting(eventId) {
+/** Adds the visitor as an attendee; Outlook then emails them the meeting invitation. */
+export async function inviteGuest(eventId, b) {
+  const res = await fetchImpl(`${graphUser()}/events/${encodeURIComponent(eventId)}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${await token()}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      body: eventBody(b),
+      attendees: [{ emailAddress: { address: b.email, name: b.fullName }, type: "required" }],
+    }),
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(`Teams guest invite failed (${res.status}): ${body?.error?.code || "unknown"}`);
+  }
+}
+
+/**
+ * Removes the meeting. With notify, the attendee gets an Outlook cancellation (which also
+ * takes it out of their calendar); without, it is deleted silently.
+ */
+export async function deleteTeamsMeeting(eventId, { notify = false } = {}) {
   if (!eventId) return;
-  await fetchImpl(`${graphUser()}/events/${encodeURIComponent(eventId)}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${await token()}` },
+  const url = `${graphUser()}/events/${encodeURIComponent(eventId)}`;
+  const res = await fetchImpl(notify ? `${url}/cancel` : url, {
+    method: notify ? "POST" : "DELETE",
+    headers: { Authorization: `Bearer ${await token()}`, ...(notify ? { "Content-Type": "application/json" } : {}) },
+    ...(notify ? { body: JSON.stringify({ comment: "This call has been cancelled." }) } : {}),
     signal: AbortSignal.timeout(10_000),
   });
+  if (!res.ok && res.status !== 404) throw new Error(`Teams event delete failed (${res.status})`);
 }

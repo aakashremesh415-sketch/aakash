@@ -125,17 +125,24 @@ With Gmail, use `smtp.gmail.com`, port 465, and a Google **app password** (needs
 Verification). A mailbox on your own domain (Zoho Mail, Google Workspace) delivers more
 reliably and looks more professional.
 
-### Google Meet links (recommended)
+### Google Calendar + Meet (recommended)
 
-Every booking gets its own Google Meet: the site creates an event in your Google Calendar
-(no guests, so Google emails nobody) and puts the unique Meet link in both emails and the
-calendar invite. Works with a free Gmail account or Google Workspace.
+Every booking becomes a real event in your Google Calendar with its own Google Meet link, and
+the visitor is added as a guest, so Google sends them a proper calendar invitation. Gmail,
+Outlook, Apple Mail and others put it straight into the visitor's calendar, with Accept/Decline
+buttons, and no .ics attachment is needed. Cancelling on the site deletes the event, and Google
+sends the visitor the cancellation, which takes it out of their calendar. Works with a free Gmail
+account or Google Workspace.
 
-**Quick start (no setup):** in Google Calendar create a recurring event with a Meet link
-(or open meet.google.com → *New meeting → Create a meeting for later*) and set that link
-as `MEETING_URL`. Every call then uses the same link.
+Order of work: the event is created with no guests → you're emailed → only then is the visitor
+added (`sendUpdates=all`). A booking that fails half-way never sends the visitor an invite.
+If Google can't be reached, the booking still goes through and the emails fall back to an .ics.
+The same applies to Outlook + Teams (Microsoft 365, below) when Google isn't connected.
 
-**Unique link per call** (about 10 minutes, once):
+**Without this setup** the site uses `MEETING_URL` (one fixed Meet link) and emails an .ics
+invite that the visitor has to add themselves.
+
+**Setup** (about 10 minutes, once):
 
 1. [console.cloud.google.com](https://console.cloud.google.com) → create a project, e.g.
    `aakashremesh-booking`.
@@ -164,8 +171,8 @@ as `MEETING_URL`. Every call then uses the same link.
    | `GOOGLE_REFRESH_TOKEN` | From step 5 |
    | `GOOGLE_CALENDAR_ID` | Optional; defaults to `primary` (your main calendar) |
 
-7. Book a test call: the event appears in your Google Calendar with a Meet link, and both
-   emails carry the same link.
+7. Book a test call: the event appears in your Google Calendar with a Meet link, the visitor
+   gets Google's invitation (from your Gmail address) and it shows up in their calendar.
 
 If Google can't be reached when someone books, the booking still goes through with
 `MEETING_URL`, and the error appears in Vercel's function logs. If you ever change your

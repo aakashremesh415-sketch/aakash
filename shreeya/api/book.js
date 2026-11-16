@@ -4,8 +4,8 @@ import { BOOKING, bookingFor, mailConfigured } from "./_lib/config.js";
 import { isOfferedSlot, slotEnd } from "./_lib/slots.js";
 import { busyBetween, release, reserve, saveContact, upcomingCountForEmail } from "./_lib/store.js";
 import { sendBookingConfirmation, sendBookingToOwner } from "./_lib/mail.js";
-import { createTeamsMeeting, deleteTeamsMeeting, teamsConfigured } from "./_lib/teams.js";
-import { createMeetMeeting, deleteMeetMeeting, meetConfigured } from "./_lib/meet.js";
+import { createTeamsMeeting, deleteTeamsMeeting, inviteGuest as inviteTeamsGuest, teamsConfigured } from "./_lib/teams.js";
+import { createMeetMeeting, deleteMeetMeeting, inviteGuest as inviteMeetGuest, meetConfigured } from "./_lib/meet.js";
 import { cancelToken } from "./_lib/secure.js";
 import { EMAIL_RE, clean, cleanText, clientIp, json, limited, looksLikeBot, readJson, sameOrigin, validTz } from "./_lib/http.js";
 
@@ -59,11 +59,12 @@ async function handler(req) {
       return json(409, { ok: false, error: "Someone just took that slot. Please pick another time." });
     }
 
-    // A unique meeting for this call: Google Meet when connected, else Teams (Microsoft 365).
-    // If the provider can't be reached the booking still goes ahead with MEETING_URL (or "link to follow").
+    // A calendar event with a unique meeting for this call: Google Calendar + Meet when connected,
+    // else Outlook + Teams (Microsoft 365). If the provider can't be reached the booking still goes
+    // ahead with MEETING_URL (or "link to follow") and the emails carry an .ics invite instead.
     const provider = meetConfigured()
-      ? { name: "Google Meet", create: createMeetMeeting, remove: deleteMeetMeeting }
-      : teamsConfigured() ? { name: "Microsoft Teams", create: createTeamsMeeting, remove: deleteTeamsMeeting } : null;
+      ? { name: "Google Meet", create: createMeetMeeting, remove: deleteMeetMeeting, invite: inviteMeetGuest }
+      : teamsConfigured() ? { name: "Microsoft Teams", create: createTeamsMeeting, remove: deleteTeamsMeeting, invite: inviteTeamsGuest } : null;
     let eventId = null;
     if (provider) {
       try {
@@ -92,6 +93,17 @@ async function handler(req) {
       await release(booking).catch(() => {});
       if (eventId) await provider.remove(eventId).catch(() => {});
       return json(502, { ok: false, error: "Your booking couldn't be completed. Please try again, or send a message instead." });
+    }
+    // Now invite the visitor to the calendar event: the provider emails them a real invitation,
+    // which Gmail / Outlook add to their calendar. If that fails, the confirmation carries an .ics.
+    if (eventId) {
+      try {
+        await provider.invite(eventId, booking);
+        booking.guestInvited = true;
+        if (booking.cancelUrl) await saveContact(booking, { replace: true }).catch((err) => console.error("[book] couldn't record the invite", err));
+      } catch (err) {
+        console.error(`[book] ${provider.name} guest invite failed; attaching an .ics instead`, err);
+      }
     }
     try {
       await sendBookingConfirmation(booking);
