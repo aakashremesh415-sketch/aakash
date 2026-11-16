@@ -60,8 +60,12 @@ const mins = (b) => b.durationMin || BOOKING.durationMin;
 const prepLine = (b) => [Array.isArray(b.software) && b.software.length ? b.software.join(", ") : "", b.entities ? `${b.entities} ${b.entities === "1" ? "entity" : "entities"}` : ""].filter(Boolean).join(" · ");
 
 export function bookingIcs(b, { method = "REQUEST", sequence = 0 } = {}) {
+  // On a Google Calendar event the invite names that same event (its UID and organizer), so a
+  // guest's calendar holds the call once and their reply reaches the owner's calendar.
+  const onGoogle = Boolean(b.icalUid && b.organizerEmail);
+  const visitor = { name: b.fullName, email: b.email };
   return buildIcs({
-    uid: b.uid,
+    uid: onGoogle ? b.icalUid : b.uid,
     start: new Date(b.start),
     end: new Date(b.end),
     summary: `${BOOKING.title}: ${b.company}`,
@@ -74,24 +78,25 @@ export function bookingIcs(b, { method = "REQUEST", sequence = 0 } = {}) {
       (b.cancelUrl && method !== "CANCEL" ? `\nCancel or reschedule: ${b.cancelUrl}` : ""),
     location: providerOf(b) ? `${providerOf(b)} meeting` : (joinUrl(b) || "Video call"),
     url: joinUrl(b) || undefined,
-    organizer: { name: MAIL.ownerName, email: fromAddress().address },
-    attendees: [{ name: b.fullName, email: b.email }, { name: MAIL.ownerName, email: MAIL.owner }],
+    organizer: { name: MAIL.ownerName, email: onGoogle ? b.organizerEmail : fromAddress().address },
+    attendees: onGoogle ? [visitor] : [visitor, { name: MAIL.ownerName, email: MAIL.owner }],
     method,
     sequence,
   });
 }
 
-// When the call is a real event in the owner's Google/Outlook calendar, the owner needs no .ics, and
-// once the visitor is a guest on it the provider sends them a proper invitation (and later any
-// cancellation), which Gmail, Outlook and others add to their calendar. The .ics is only the fallback.
+// When the call is a real event in the owner's Google/Outlook calendar, the owner needs no .ics.
+// The visitor's invitation travels in our own email (shown as Accept / Add to calendar by Gmail,
+// Outlook and others), except with Outlook/Teams, which sends its own once they are a guest.
+const providerSends = (b) => Boolean(b.guestInvited) && providerOf(b) === "Microsoft Teams";
 const ownerIcs = (b, content, filename = "invite.ics", method = "REQUEST") =>
   b.eventId ? {} : { icalEvent: { method, filename, content } };
 const visitorIcs = (b, content, filename = "invite.ics", method = "REQUEST") =>
-  b.guestInvited ? {} : { icalEvent: { method, filename, content } };
+  providerSends(b) ? {} : { icalEvent: { method, filename, content } };
 const calendarApp = (b) => providerOf(b) === "Microsoft Teams" ? "Outlook" : "Google Calendar";
-const inviteText = (b) => b.guestInvited
+const inviteText = (b) => providerSends(b)
   ? `A calendar invitation from ${calendarApp(b)} is on its way to this address. It adds the call to your calendar (Gmail, Outlook and most others do this automatically).`
-  : "The calendar invite is attached.";
+  : "The calendar invitation is in this email: accept it to add the call to your calendar.";
 
 const button = (href, label) =>
   `<p style="margin:16px 0"><a href="${escapeHtml(href)}" style="display:inline-block;background:#111216;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">${escapeHtml(label)}</a></p>`;

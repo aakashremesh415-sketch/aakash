@@ -128,16 +128,18 @@ reliably and looks more professional.
 ### Google Calendar + Meet (recommended)
 
 Every booking becomes a real event in your Google Calendar with its own Google Meet link, and
-the visitor is added as a guest, so Google sends them a proper calendar invitation. Gmail,
-Outlook, Apple Mail and others put it straight into the visitor's calendar, with Accept/Decline
-buttons, and no .ics attachment is needed. Cancelling on the site deletes the event, and Google
-sends the visitor the cancellation, which takes it out of their calendar. Works with a free Gmail
-account or Google Workspace.
+the visitor is added as a guest. The invitation itself travels in the site's own confirmation
+email (Google's invitation emails did not arrive in testing): Gmail, Outlook, Apple Mail and
+others show it with Accept / Add to calendar buttons. It names the same Google event, so the call
+appears once in the visitor's calendar. Cancelling on the site deletes the event and emails the
+visitor a cancellation, which takes it out of their calendar. Works with a free Gmail account or
+Google Workspace.
 
 Order of work: the event is created with no guests → you're emailed → only then is the visitor
-added (`sendUpdates=all`). A booking that fails half-way never sends the visitor an invite.
-If Google can't be reached, the booking still goes through and the emails fall back to an .ics.
-The same applies to Outlook + Teams (Microsoft 365, below) when Google isn't connected.
+added (`sendUpdates=none`) and sent the confirmation. A booking that fails half-way never sends
+the visitor an invite. If Google can't be reached, the booking still goes through with
+`MEETING_URL` and a stand-alone invite. With Outlook + Teams (Microsoft 365, below), used when
+Google isn't connected, Outlook sends the visitor its own invitation instead.
 
 **Without this setup** the site uses `MEETING_URL` (one fixed Meet link) and emails an .ics
 invite that the visitor has to add themselves.
@@ -172,7 +174,7 @@ invite that the visitor has to add themselves.
    | `GOOGLE_CALENDAR_ID` | Optional; defaults to `primary` (your main calendar) |
 
 7. Book a test call: the event appears in your Google Calendar with a Meet link, the visitor
-   gets Google's invitation (from your Gmail address) and it shows up in their calendar.
+   gets the confirmation email with the invitation in it (Accept / Add to calendar).
 
 If Google can't be reached when someone books, the booking still goes through with
 `MEETING_URL`, and the error appears in Vercel's function logs. If you ever change your

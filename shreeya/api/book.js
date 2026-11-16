@@ -72,6 +72,7 @@ async function handler(req) {
         booking.meetingUrl = meeting.joinUrl;
         booking.meetingProvider = provider.name;
         booking.eventId = eventId = meeting.eventId;
+        if (meeting.icalUid && meeting.organizerEmail) { booking.icalUid = meeting.icalUid; booking.organizerEmail = meeting.organizerEmail; }
       } catch (err) {
         console.error(`[book] ${provider.name} meeting creation failed; using the fallback link`, err);
       }
@@ -94,15 +95,16 @@ async function handler(req) {
       if (eventId) await provider.remove(eventId).catch(() => {});
       return json(502, { ok: false, error: "Your booking couldn't be completed. Please try again, or send a message instead." });
     }
-    // Now invite the visitor to the calendar event: the provider emails them a real invitation,
-    // which Gmail / Outlook add to their calendar. If that fails, the confirmation carries an .ics.
+    // Now add the visitor to the calendar event. With Google the invitation itself travels in our
+    // confirmation email (Accept / Add to calendar in Gmail, Outlook and others); Outlook/Teams
+    // sends its own. If adding them fails, the confirmation still carries an invite.
     if (eventId) {
       try {
         await provider.invite(eventId, booking);
         booking.guestInvited = true;
         if (booking.cancelUrl) await saveContact(booking, { replace: true }).catch((err) => console.error("[book] couldn't record the invite", err));
       } catch (err) {
-        console.error(`[book] ${provider.name} guest invite failed; attaching an .ics instead`, err);
+        console.error(`[book] ${provider.name} guest invite failed; the emailed invite stands alone`, err);
       }
     }
     try {
