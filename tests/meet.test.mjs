@@ -9,6 +9,7 @@ process.env.MEETING_URL = "https://meet.google.com/fix-edli-nkk";
 process.env.GOOGLE_CLIENT_ID = "gid";
 process.env.GOOGLE_CLIENT_SECRET = "gsecret";
 process.env.GOOGLE_REFRESH_TOKEN = "grefresh";
+process.env.BOOKING_SECRET = "test-secret-0123456789abcdef";
 // Teams is also configured: Google Meet must win.
 process.env.MS_TENANT_ID = "t"; process.env.MS_CLIENT_ID = "c"; process.env.MS_CLIENT_SECRET = "s"; process.env.MS_ORGANIZER = "o@example.com";
 
@@ -18,6 +19,7 @@ const meet = await import("../api/_lib/meet.js");
 const teams = await import("../api/_lib/teams.js");
 const slotsFn = (await import("../api/slots.js")).GET;
 const bookFn = (await import("../api/book.js")).POST;
+const cancelFn = (await import("../api/cancel.js")).POST;
 
 let g;
 const reply = (status, obj) => new Response(JSON.stringify(obj), { status, headers: { "content-type": "application/json" } });
@@ -27,6 +29,7 @@ const fakeGoogle = async (url, init = {}) => {
   if (url.startsWith("https://oauth2.googleapis.com/token")) return reply(200, { access_token: "gtok", expires_in: 3600 });
   if (init.method === "DELETE") return new Response(null, { status: 204 });
   if (g.fail) return reply(500, { error: { status: "INTERNAL" } });
+  if (init.method === "PATCH") return g.failInvite ? reply(403, { error: { status: "PERMISSION_DENIED" } }) : reply(200, { id: url.split("?")[0].split("/").pop() });
   if (init.method === "POST") {
     g.n += 1;
     // The second booking simulates a conference still being set up when the event returns.
@@ -63,11 +66,20 @@ test("each booking gets its own Google Meet link in both emails and the invite",
   assert.deepEqual(links, ["https://meet.google.com/abc-defg-001", "https://meet.google.com/abc-defg-001",
     "https://meet.google.com/abc-defg-002", "https://meet.google.com/abc-defg-002"]);
   assert.match(sent[1].html, /Join the Google Meet/);
-  assert.match(sent[1].icalEvent.content, /LOCATION:Google Meet meeting/);
+  // The event is in the owner's Google Calendar and Google invites the visitor: no .ics anywhere.
+  for (const m of sent) assert.equal(m.icalEvent, undefined, `no .ics in "${m.subject}"`);
+  assert.match(sent[1].text, /calendar invitation from Google Calendar/);
+  assert.match(sent[0].text + sent[0].html, /Added to your Google Calendar/);
   const create = JSON.parse(g.calls.find((c) => c.method === "POST" && c.url.includes("/events")).body);
   assert.equal(create.conferenceData.createRequest.conferenceSolutionKey.type, "hangoutsMeet");
-  assert.equal(create.attendees, undefined, "Google must not email anyone itself");
+  assert.equal(create.attendees, undefined, "no guest until the owner has been told");
   assert.ok(g.calls.find((c) => c.method === "POST" && c.url.includes("/events")).url.includes("sendUpdates=none"));
+  const invite = g.calls.find((c) => c.method === "PATCH" && c.url.includes("/events/gev-1"));
+  assert.ok(invite.url.includes("sendUpdates=all"), "Google emails the visitor the invitation");
+  const patch = JSON.parse(invite.body);
+  assert.deepEqual(patch.attendees, [{ email: "a@a.com", displayName: "A" }]);
+  assert.match(patch.description, /Join: https:\/\/meet\.google\.com\/abc-defg-001/);
+  assert.match(patch.description, /Cancel or reschedule: https:\/\/\S+\/cancel#/);
   assert.equal(g.calls.filter((c) => c.url.startsWith("https://oauth2.googleapis.com")).length, 1, "token reused");
   assert.equal(teamsCalls, 0, "Teams is not used when Google Meet is connected");
 });
@@ -86,5 +98,33 @@ test("a rolled-back booking also deletes its Google event", async () => {
   failOwner = true;
   const res = await book({ fullName: "A", email: "a@a.com", company: "A", start: (await slots())[0] });
   assert.equal(res.status, 502);
-  assert.ok(g.calls.some((c) => c.method === "DELETE" && c.url.includes("/events/gev-1")));
+  assert.ok(g.calls.some((c) => c.method === "DELETE" && c.url.includes("/events/gev-1") && c.url.includes("sendUpdates=none")));
+  assert.ok(!g.calls.some((c) => c.method === "PATCH"), "the visitor is never invited to a rolled-back call");
+});
+
+test("if the Google invite fails the visitor gets an .ics instead", async () => {
+  reset();
+  g.failInvite = true;
+  assert.equal((await book({ fullName: "A", email: "a@a.com", company: "A", start: (await slots())[0] })).status, 200);
+  assert.equal(sent[0].icalEvent, undefined, "the owner's calendar already has the event");
+  assert.match(sent[1].icalEvent.content, /LOCATION:Google Meet meeting/);
+  assert.match(sent[1].text, /The calendar invite is attached/);
+});
+
+test("cancelling deletes the Google event and lets Google tell the visitor", async () => {
+  reset();
+  const s = (await slots())[0];
+  await book({ fullName: "A", email: "a@a.com", company: "A", start: s });
+  const token = /\/cancel#(\S+)/.exec(sent[1].text)[1];
+  sent = [];
+  const res = await cancelFn(new Request("https://aakashremesh.com/api/cancel", {
+    method: "POST", headers: { "content-type": "application/json", origin: "https://aakashremesh.com", "x-real-ip": "10.8.0.1" },
+    body: JSON.stringify({ token, action: "cancel" }),
+  }));
+  assert.equal((await res.json()).cancelled, true);
+  const del = g.calls.find((c) => c.method === "DELETE");
+  assert.ok(del.url.includes("/events/gev-1") && del.url.includes("sendUpdates=all"), "Google sends the visitor the cancellation");
+  assert.equal(sent.length, 2);
+  for (const m of sent) assert.equal(m.icalEvent, undefined, "no CANCEL .ics needed");
+  assert.ok((await slots()).includes(s), "slot is free again");
 });

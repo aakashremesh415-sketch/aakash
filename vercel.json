@@ -4,6 +4,20 @@
   "outputDirectory": "public",
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "linkedin.aakashremesh.com" }],
+      "destination": "https://www.linkedin.com/in/aakashremesh/",
+      "permanent": false
+    },
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "upwork.aakashremesh.com" }],
+      "destination": "https://www.upwork.com/freelancers/~01dfe8e2fc663ed9ec",
+      "permanent": false
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

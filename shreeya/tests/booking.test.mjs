@@ -25,7 +25,9 @@ const fakeFetch = async (url, init = {}) => {
   const reply = (status, obj) => new Response(JSON.stringify(obj), { status, headers: { "content-type": "application/json" } });
   if (String(url).includes("login.microsoftonline.com")) return reply(200, { access_token: "tok", expires_in: 3600 });
   if (init.method === "DELETE") return new Response(null, { status: 204 });
+  if (String(url).endsWith("/cancel")) return new Response(null, { status: 202 });
   if (graph.fail) return reply(503, { error: { code: "ServiceUnavailable" } });
+  if (init.method === "PATCH") return graph.failInvite ? reply(403, { error: { code: "ErrorAccessDenied" } }) : reply(200, { id: String(url).split("/").pop() });
   graph.n += 1;
   return reply(201, { id: `evt-${graph.n}`, onlineMeeting: { joinUrl: `https://teams.microsoft.com/l/meetup-join/meeting-${graph.n}` } });
 };
@@ -151,7 +153,7 @@ test("happy path: reserves, emails owner first, then the visitor with an invite"
   assert.equal(sent[0].to.address, "owner@example.com");
   assert.equal(sent[0].replyTo.address, "jane@acme.com");
   assert.equal(sent[1].to.address, "jane@acme.com");
-  assert.match(sent[1].icalEvent.content, /BEGIN:VEVENT/);
+  assert.match(sent[1].text, /calendar invitation from Outlook/); // the calendar provider sends the invite
   assert.match(sent[1].text, /EDT|EST|GMT-4|GMT-5/);
   // The slot is gone from the public list.
   const after = await (await slotsFn(new Request("https://shreeyamundade.com/api/slots"))).json();
@@ -287,8 +289,13 @@ test("each booking gets its own Teams link in both emails and the invite", async
     "https://teams.microsoft.com/l/meetup-join/meeting-1", "https://teams.microsoft.com/l/meetup-join/meeting-1",
     "https://teams.microsoft.com/l/meetup-join/meeting-2", "https://teams.microsoft.com/l/meetup-join/meeting-2",
   ]);
-  assert.match(sent[1].icalEvent.content, /URL:https:\/\/teams\.microsoft\.com\/l\/meetup-join\/meeting-1/);
   assert.match(sent[1].html, /Join the Teams Meeting/);
+  // The event lives in the organizer's Outlook calendar and Outlook invites the visitor: no .ics anywhere.
+  assert.equal(sent[0].icalEvent, undefined, "owner email has no .ics");
+  assert.equal(sent[1].icalEvent, undefined, "visitor email has no .ics");
+  assert.match(sent[1].text, /calendar invitation from Outlook/);
+  const invite = graph.calls.find((c) => c.method === "PATCH" && c.url.endsWith("/events/evt-1"));
+  assert.deepEqual(JSON.parse(invite.body).attendees, [{ emailAddress: { address: "a@a.com", name: "A" }, type: "required" }]);
   const create = graph.calls.find((c) => c.method === "POST" && c.url.includes("/events"));
   const body = JSON.parse(create.body);
   assert.equal(body.isOnlineMeeting, true);
@@ -309,6 +316,16 @@ test("if Teams is down the booking still succeeds with the fallback link", async
   assert.doesNotMatch(sent[1].html, /Teams Meeting/);
 });
 
+test("if the Outlook invite fails the visitor gets an .ics instead", async () => {
+  reset();
+  graph.failInvite = true;
+  const start = await firstSlot();
+  const res = await bookFn(req("/api/book", { ...human, fullName: "A", email: "a@a.com", company: "A", start, timeZone: "UTC" }));
+  assert.equal(res.status, 200);
+  assert.match(sent[1].icalEvent.content, /URL:https:\/\/teams\.microsoft\.com\/l\/meetup-join\/meeting-1/);
+  assert.match(sent[1].text, /The calendar invite is attached/);
+});
+
 test("a rolled-back booking also deletes its Teams meeting", async () => {
   reset();
   failOwner = true;
@@ -316,4 +333,5 @@ test("a rolled-back booking also deletes its Teams meeting", async () => {
   const res = await bookFn(req("/api/book", { ...human, fullName: "A", email: "a@a.com", company: "A", start, timeZone: "UTC" }));
   assert.equal(res.status, 502);
   assert.ok(graph.calls.some((c) => c.method === "DELETE" && c.url.endsWith("/events/evt-1")));
+  assert.ok(!graph.calls.some((c) => c.method === "PATCH"), "the visitor is never invited to a rolled-back call");
 });

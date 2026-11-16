@@ -47,6 +47,10 @@ async function vercelStore() {
         try { await blob.head(pathname); return false; } catch { throw err; }
       }
     },
+    /** Writes the file, replacing it if it exists. */
+    async put(pathname, body) {
+      await blob.put(pathname, body, { ...opts, allowOverwrite: true });
+    },
     /** File contents as text, or null if it doesn't exist. */
     async read(pathname) {
       try {
@@ -109,13 +113,16 @@ export async function reserve(booking) {
  * Keeps the visitor's details (encrypted) until the call, for the reminder and the cancel link.
  * Returns false when there's no BOOKING_SECRET, so the caller leaves those features out.
  */
-export async function saveContact(booking) {
+export async function saveContact(booking, { replace = false } = {}) {
   if (!secretConfigured()) return false;
   const s = await store();
-  const { uid, start, end, durationMin, fullName, email, company, clientTz, meetingUrl, meetingProvider, eventId } = booking;
-  return s.create(`${CONTACTS}${start}.json`, JSON.stringify({
-    v: 1, data: seal({ uid, start, end, durationMin, fullName, email, company, clientTz, meetingUrl, meetingProvider, eventId }),
-  }));
+  const { uid, start, end, durationMin, fullName, email, company, clientTz, meetingUrl, meetingProvider, eventId, guestInvited } = booking;
+  const body = JSON.stringify({
+    v: 1, data: seal({ uid, start, end, durationMin, fullName, email, company, clientTz, meetingUrl, meetingProvider, eventId, guestInvited }),
+  });
+  if (!replace) return s.create(`${CONTACTS}${start}.json`, body);
+  await s.put(`${CONTACTS}${start}.json`, body);
+  return true;
 }
 
 /** The decrypted contact record for a call, or null. */
@@ -167,6 +174,7 @@ export function memoryStore() {
   return {
     async keys(prefix) { return [...m.keys()].filter((k) => k.startsWith(prefix)); },
     async create(k, v) { if (m.has(k)) return false; m.set(k, v); return true; },
+    async put(k, v) { m.set(k, v); },
     async read(k) { return m.has(k) ? m.get(k) : null; },
     async remove(ks) { ks.forEach((k) => m.delete(k)); },
     _map: m,
