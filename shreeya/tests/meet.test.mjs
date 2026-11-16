@@ -34,7 +34,7 @@ const fakeGoogle = async (url, init = {}) => {
     g.n += 1;
     // The second booking simulates a conference still being set up when the event returns.
     return g.n === 2 ? reply(200, { id: `gev-${g.n}`, conferenceData: { createRequest: { status: { statusCode: "pending" } } } })
-      : reply(200, { id: `gev-${g.n}`, hangoutLink: `https://meet.google.com/abc-defg-00${g.n}` });
+      : reply(200, { id: `gev-${g.n}`, iCalUID: `gev-${g.n}@google.com`, organizer: { email: "owner.cal@gmail.com" }, hangoutLink: `https://meet.google.com/abc-defg-00${g.n}` });
   }
   return reply(200, { id: url.split("/").pop(), hangoutLink: "https://meet.google.com/abc-defg-002" });
 };
@@ -66,16 +66,22 @@ test("each booking gets its own Google Meet link in both emails and the invite",
   assert.deepEqual(links, ["https://meet.google.com/abc-defg-001", "https://meet.google.com/abc-defg-001",
     "https://meet.google.com/abc-defg-002", "https://meet.google.com/abc-defg-002"]);
   assert.match(sent[1].html, /Join the Google Meet/);
-  // The event is in the owner's Google Calendar and Google invites the visitor: no .ics anywhere.
-  for (const m of sent) assert.equal(m.icalEvent, undefined, `no .ics in "${m.subject}"`);
-  assert.match(sent[1].text, /calendar invitation from Google Calendar/);
+  // The event is in the owner's Google Calendar, so the owner needs no .ics. The visitor's invite
+  // travels in our confirmation email and names that same Google event, so it shows up once.
+  assert.equal(sent[0].icalEvent, undefined, "owner email has no .ics");
+  const ics = sent[1].icalEvent.content.replace(/\r\n /g, "");
+  assert.equal(sent[1].icalEvent.method, "REQUEST");
+  assert.match(ics, /UID:gev-1@google\.com/);
+  assert.match(ics, /ORGANIZER;CN="[^"]+":mailto:owner\.cal@gmail\.com/);
+  assert.deepEqual(ics.match(/ATTENDEE[^\r\n]*/g).map((l) => l.split("mailto:")[1]), ["a@a.com"]);
+  assert.match(sent[1].text, /calendar invitation is in this email/);
   assert.match(sent[0].text + sent[0].html, /Added to your Google Calendar/);
   const create = JSON.parse(g.calls.find((c) => c.method === "POST" && c.url.includes("/events")).body);
   assert.equal(create.conferenceData.createRequest.conferenceSolutionKey.type, "hangoutsMeet");
   assert.equal(create.attendees, undefined, "no guest until the owner has been told");
   assert.ok(g.calls.find((c) => c.method === "POST" && c.url.includes("/events")).url.includes("sendUpdates=none"));
   const invite = g.calls.find((c) => c.method === "PATCH" && c.url.includes("/events/gev-1"));
-  assert.ok(invite.url.includes("sendUpdates=all"), "Google emails the visitor the invitation");
+  assert.ok(invite.url.includes("sendUpdates=none"), "our own email carries the invitation, not Google's");
   const patch = JSON.parse(invite.body);
   assert.deepEqual(patch.attendees, [{ email: "a@a.com", displayName: "A" }]);
   assert.match(patch.description, /Join: https:\/\/meet\.google\.com\/abc-defg-001/);
@@ -108,10 +114,10 @@ test("if the Google invite fails the visitor gets an .ics instead", async () => 
   assert.equal((await book({ fullName: "A", email: "a@a.com", company: "A", start: (await slots())[0] })).status, 200);
   assert.equal(sent[0].icalEvent, undefined, "the owner's calendar already has the event");
   assert.match(sent[1].icalEvent.content, /LOCATION:Google Meet meeting/);
-  assert.match(sent[1].text, /The calendar invite is attached/);
+  assert.match(sent[1].text, /calendar invitation is in this email/);
 });
 
-test("cancelling deletes the Google event and lets Google tell the visitor", async () => {
+test("cancelling deletes the Google event and emails the visitor a cancellation for it", async () => {
   reset();
   const s = (await slots())[0];
   await book({ fullName: "A", email: "a@a.com", company: "A", start: s });
@@ -123,8 +129,10 @@ test("cancelling deletes the Google event and lets Google tell the visitor", asy
   }));
   assert.equal((await res.json()).cancelled, true);
   const del = g.calls.find((c) => c.method === "DELETE");
-  assert.ok(del.url.includes("/events/gev-1") && del.url.includes("sendUpdates=all"), "Google sends the visitor the cancellation");
+  assert.ok(del.url.includes("/events/gev-1") && del.url.includes("sendUpdates=none"), "our own email carries the cancellation");
   assert.equal(sent.length, 2);
-  for (const m of sent) assert.equal(m.icalEvent, undefined, "no CANCEL .ics needed");
+  assert.equal(sent[0].icalEvent, undefined, "the owner's event is already gone");
+  assert.equal(sent[1].icalEvent.method, "CANCEL");
+  assert.match(sent[1].icalEvent.content, /UID:gev-1@google\.com/);
   assert.ok((await slots()).includes(s), "slot is free again");
 });

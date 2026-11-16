@@ -323,7 +323,7 @@ test("if the Outlook invite fails the visitor gets an .ics instead", async () =>
   const res = await bookFn(req("/api/book", { ...human, fullName: "A", email: "a@a.com", company: "A", start, timeZone: "UTC" }));
   assert.equal(res.status, 200);
   assert.match(sent[1].icalEvent.content, /URL:https:\/\/teams\.microsoft\.com\/l\/meetup-join\/meeting-1/);
-  assert.match(sent[1].text, /The calendar invite is attached/);
+  assert.match(sent[1].text, /calendar invitation is in this email/);
 });
 
 test("a rolled-back booking also deletes its Teams meeting", async () => {

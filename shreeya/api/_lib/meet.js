@@ -67,7 +67,11 @@ export function eventDescription(b) {
     (b.cancelUrl ? `\n\nCancel or reschedule: ${b.cancelUrl}` : "");
 }
 
-/** Creates the event + Google Meet in the owner's calendar, with no guests yet. Returns { joinUrl, eventId }. */
+/**
+ * Creates the event + Google Meet in the owner's calendar, with no guests yet.
+ * Returns { joinUrl, eventId, icalUid, organizerEmail }: the last two let our own emailed invite
+ * point at this same event, so a guest's calendar shows it once.
+ */
 export async function createMeetMeeting(b) {
   const auth = { Authorization: `Bearer ${await token()}` };
   const res = await fetchImpl(`${eventsUrl()}?conferenceDataVersion=1&sendUpdates=none`, {
@@ -101,16 +105,16 @@ export async function createMeetMeeting(b) {
     await deleteMeetMeeting(ev.id).catch(() => {});
     throw new Error("Google returned no Meet link");
   }
-  return { joinUrl, eventId: ev.id };
+  return { joinUrl, eventId: ev.id, icalUid: ev.iCalUID || "", organizerEmail: ev.organizer?.email || "" };
 }
 
 /**
- * Adds the visitor as a guest. Google then emails them a calendar invitation (from the owner's
- * Google account) that Gmail, Outlook and others add to their calendar. The owner is the
- * organizer, so the event is already in the owner's own calendar.
+ * Adds the visitor as a guest, so they are on the owner's event and can join the Meet directly.
+ * Google is told not to email them: its invitation emails did not arrive in testing, so the
+ * invitation travels in our own confirmation email instead (same event UID, see mail.js).
  */
 export async function inviteGuest(eventId, b) {
-  const res = await fetchImpl(`${eventsUrl()}/${encodeURIComponent(eventId)}?sendUpdates=all`, {
+  const res = await fetchImpl(`${eventsUrl()}/${encodeURIComponent(eventId)}?sendUpdates=none`, {
     method: "PATCH",
     headers: { Authorization: `Bearer ${await token()}`, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -126,8 +130,8 @@ export async function inviteGuest(eventId, b) {
 }
 
 /**
- * Deletes the event from the owner's calendar. With notify, Google also sends the guest a
- * cancellation, which takes the event out of their calendar.
+ * Deletes the event from the owner's calendar (and from a Google guest's). With notify, Google
+ * would also email the guest; we send our own cancellation instead, so callers leave it off.
  */
 export async function deleteMeetMeeting(eventId, { notify = false } = {}) {
   if (!eventId) return;

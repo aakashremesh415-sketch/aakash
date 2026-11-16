@@ -116,9 +116,9 @@ export async function reserve(booking) {
 export async function saveContact(booking, { replace = false } = {}) {
   if (!secretConfigured()) return false;
   const s = await store();
-  const { uid, start, end, durationMin, fullName, email, company, clientTz, meetingUrl, meetingProvider, eventId, guestInvited } = booking;
+  const { uid, start, end, durationMin, fullName, email, company, clientTz, meetingUrl, meetingProvider, eventId, guestInvited, icalUid, organizerEmail } = booking;
   const body = JSON.stringify({
-    v: 1, data: seal({ uid, start, end, durationMin, fullName, email, company, clientTz, meetingUrl, meetingProvider, eventId, guestInvited }),
+    v: 1, data: seal({ uid, start, end, durationMin, fullName, email, company, clientTz, meetingUrl, meetingProvider, eventId, guestInvited, icalUid, organizerEmail }),
   });
   if (!replace) return s.create(`${CONTACTS}${start}.json`, body);
   await s.put(`${CONTACTS}${start}.json`, body);
