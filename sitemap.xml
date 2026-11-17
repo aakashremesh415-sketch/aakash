@@ -1,8 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://www.aakashremesh.com/</loc>
-    <lastmod>2026-11-11</lastmod>
+    <lastmod>2026-11-17</lastmod>
+    <image:image>
+      <image:loc>https://www.aakashremesh.com/assets/img/aakash-remesh.jpg</image:loc>
+      <image:title>Aakash Remesh</image:title>
+      <image:caption>Aakash Remesh, bookkeeping and accounting systems consultant</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.aakashremesh.com/assets/img/og-card.jpg</image:loc>
+      <image:title>Aakash Remesh, Accounting Systems Consultant</image:title>
+      <image:caption>Aakash Remesh beside the audit seal logo</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://www.aakashremesh.com/assets/Aakash-Remesh-Resume.pdf</loc>

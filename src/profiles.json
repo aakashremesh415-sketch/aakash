@@ -1,0 +1,22 @@
+[
+  {
+    "name": "LinkedIn",
+    "url": "https://www.linkedin.com/in/aakashremesh/",
+    "note": "verified, live"
+  },
+  {
+    "name": "Upwork",
+    "url": "https://www.upwork.com/freelancers/~01dfe8e2fc663ed9ec",
+    "note": "verified, live"
+  },
+  {
+    "name": "YouTube",
+    "url": "",
+    "note": "add the channel URL here, e.g. https://www.youtube.com/@yourhandle; empty entries are skipped"
+  },
+  {
+    "name": "Instagram",
+    "url": "https://www.instagram.com/aakash415/",
+    "note": "provided by Aakash 17 Nov 2026"
+  }
+]

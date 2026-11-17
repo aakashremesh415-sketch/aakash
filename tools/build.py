@@ -18,8 +18,23 @@ TODAY = date.today().isoformat()
 
 UPWORK = "https://www.upwork.com/freelancers/~01dfe8e2fc663ed9ec"
 LINKEDIN = "https://www.linkedin.com/in/aakashremesh/"
+PORTRAIT_ID = f"{SITE}/#portrait"
+PORTRAIT_URL = f"{SITE}/assets/img/aakash-remesh.jpg"
+
+# Official profiles (src/profiles.json). Entries with an empty url are skipped, so adding
+# YouTube / Instagram later is one line in that file. They feed the Person sameAs list,
+# the visible footer links (rel="me"), the "Where can I find Aakash Remesh online?" FAQ
+# and the profile section of llms.txt, so all of them always agree.
+profiles = [p for p in json.loads((SRC / "profiles.json").read_text()) if p.get("url")]
+PROFILE_URLS = [p["url"] for p in profiles]
 
 faq = json.loads((SRC / "faq.json").read_text())
+faq.append({
+    "q": "Where can I find Aakash Remesh online?",
+    "a": "Aakash Remesh's own website is " + SITE + "/. His official profiles are "
+         + "; ".join(f"{p['name']} ({p['url']})" for p in profiles)
+         + ". These are the only profiles run by him. This is the Aakash Remesh (spelled R-e-m-e-s-h) who is a bookkeeping and accounting systems consultant based in Kerala, India, not other people with similar names such as Akash Ramesh.",
+})
 # Client reviews, copied word for word from Upwork (see README → "Adding a testimonial").
 testimonials = json.loads((SRC / "testimonials.json").read_text())
 
@@ -84,9 +99,22 @@ graph = {
             "about": {"@id": PERSON_ID},
             "mainEntity": {"@id": PERSON_ID},
             "description": "Aakash Remesh sets up, cleans up and migrates QuickBooks Online, Intuit Enterprise Suite, Sage Intacct, NetSuite, Zoho Books and Xero for eCommerce, SaaS, manufacturing and multi-entity businesses.",
-            "primaryImageOfPage": f"{SITE}/assets/img/og-card.jpg",
+            "primaryImageOfPage": {"@id": PORTRAIT_ID},
             "dateModified": TODAY,
             "inLanguage": "en",
+        },
+        {
+            "@type": "ImageObject",
+            "@id": PORTRAIT_ID,
+            "url": PORTRAIT_URL,
+            "contentUrl": PORTRAIT_URL,
+            "width": 1200,
+            "height": 1200,
+            "name": "Aakash Remesh",
+            "caption": "Aakash Remesh, bookkeeping and accounting systems consultant",
+            "description": "Illustrated portrait of Aakash Remesh, a bookkeeping and accounting systems consultant from Kerala, India.",
+            "representativeOfPage": True,
+            "about": {"@id": PERSON_ID},
         },
         {
             "@type": "Person",
@@ -97,7 +125,9 @@ graph = {
             "jobTitle": "Bookkeeping & Accounting Systems Consultant",
             "description": "Bookkeeping and accounting systems consultant with 9+ years of experience setting up, cleaning up and migrating QuickBooks Online, Sage Intacct, NetSuite, Zoho Books and Xero for eCommerce, SaaS, manufacturing and multi-entity businesses.",
             "url": f"{SITE}/",
-            "image": f"{SITE}/assets/img/og.jpg",
+            "image": [PORTRAIT_URL, f"{SITE}/assets/img/og-card.jpg"],
+            "disambiguatingDescription": "Aakash Remesh (R-e-m-e-s-h), an accounting systems consultant from Kerala, India: QuickBooks Online, Sage Intacct, NetSuite, Zoho Books and Xero.",
+            "mainEntityOfPage": {"@id": f"{SITE}/#webpage"},
             "address": {"@type": "PostalAddress", "addressRegion": "Kerala", "addressCountry": "IN"},
             "worksFor": {"@type": "Organization", "name": "Renocrew Solutions", "url": "https://www.renocrewsolutions.com"},
             "hasOccupation": {
@@ -134,7 +164,7 @@ graph = {
                 for n, d in SERVICES
             ],
             "email": "mailto:info@aakashremesh.com",
-            "sameAs": [LINKEDIN, UPWORK],
+            "sameAs": PROFILE_URLS,
         },
         {
             "@type": "ProfessionalService",
@@ -151,7 +181,7 @@ graph = {
             "employee": {"@id": PERSON_ID},
             "knowsLanguage": ["English", "Hindi", "Malayalam", "Tamil"],
             "serviceType": [n for n, _ in SERVICES],
-            "sameAs": [UPWORK],
+            "sameAs": PROFILE_URLS,
         },
         {
             "@type": "FAQPage",
@@ -190,10 +220,15 @@ testimonials_html = (
     if testimonials else ""
 )
 
+profile_links = "\n".join(
+    f'          <a href="{html.escape(p["url"])}" target="_blank" rel="noopener noreferrer me">{html.escape(p["name"])}<span class="sr-only"> (opens in a new tab)</span></a>'
+    for p in profiles
+)
 page = (SRC / "index.html").read_text()
 for key, value in {
     "{{JSONLD}}": json.dumps(graph, indent=2, ensure_ascii=False).replace("</", "<\\/"),
     "{{FAQ}}": faq_html,
+    "{{PROFILE_LINKS}}": profile_links,
     "{{TESTIMONIALS}}": testimonials_html,
     "{{SEAL}}": (SRC / "seal.svg").read_text().strip(),
     "{{CONTACT}}": (SRC / "contact.html").read_text().rstrip(),
@@ -210,6 +245,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import blog
 
 blog_urls, blog_llms = blog.build(ROOT, SITE, PERSON_ID, TODAY)
+HOME_IMAGES = [
+    (PORTRAIT_URL, "Aakash Remesh", "Aakash Remesh, bookkeeping and accounting systems consultant"),
+    (f"{SITE}/assets/img/og-card.jpg", "Aakash Remesh, Accounting Systems Consultant", "Aakash Remesh beside the audit seal logo"),
+]
 SITEMAP = [
     (f"{SITE}/", TODAY),
     (f"{SITE}/assets/Aakash-Remesh-Resume.pdf", "2026-10-07"),
@@ -217,8 +256,12 @@ SITEMAP = [
 ] + blog_urls
 (ROOT / "sitemap.xml").write_text(
     '<?xml version="1.0" encoding="UTF-8"?>' + chr(10)
-    + '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + chr(10)
-    + "".join(f"  <url>{chr(10)}    <loc>{u}</loc>{chr(10)}    <lastmod>{d}</lastmod>{chr(10)}  </url>{chr(10)}" for u, d in SITEMAP)
+    + '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">' + chr(10)
+    + "".join(
+        f"  <url>{chr(10)}    <loc>{u}</loc>{chr(10)}    <lastmod>{d}</lastmod>{chr(10)}"
+        + ("".join(f"    <image:image>{chr(10)}      <image:loc>{i}</image:loc>{chr(10)}      <image:title>{html.escape(t)}</image:title>{chr(10)}      <image:caption>{html.escape(c)}</image:caption>{chr(10)}    </image:image>{chr(10)}" for i, t, c in HOME_IMAGES) if u == f"{SITE}/" else "")
+        + f"  </url>{chr(10)}"
+        for u, d in SITEMAP)
     + "</urlset>" + chr(10),
     encoding="utf-8",
 )
@@ -244,7 +287,12 @@ for name in PUBLISH:
 
 # llms.txt (summary for AI assistants) gets the FAQ appended from faq.json,
 # so the answers AI tools quote always match the page.
-llms = (ROOT / "llms.txt").read_text(encoding="utf-8").rstrip() + "\n\n## Frequently Asked Questions\n"
+llms = (ROOT / "llms.txt").read_text(encoding="utf-8").rstrip()
+llms += "\n\n## Official Profiles (Aakash Remesh)\n\nThese are the only profiles run by Aakash Remesh, the bookkeeping and accounting systems consultant from Kerala, India. Not to be confused with other people named Akash Ramesh or similar.\n\n- Website: " + SITE + "/\n"
+for p in profiles:
+    llms += f"- {p['name']}: {p['url']}\n"
+llms += f"- Portrait image: {PORTRAIT_URL}\n"
+llms += "\n## Frequently Asked Questions\n"
 for f in faq:
     llms += f"\n### {f['q']}\n\n{f['a']}\n"
 llms += blog_llms
